@@ -1,0 +1,51 @@
+### 1️⃣ Root route
+GET http://localhost:5000
+Content-Type: application/json
+
+###
+
+### 2️⃣ Test route
+GET http://localhost:5000/api/test
+Content-Type: application/json
+
+###
+
+### 3️⃣ Users route
+GET http://localhost:5000/api/users
+Content-Type: application/json
+
+###
+
+### 4️⃣ Properties route
+GET http://localhost:5000/api/properties
+Content-Type: application/json
+
+### Register User
+POST http://localhost:5000/api/users/register
+Content-Type: application/json
+
+{
+  "name": "Vivek",
+  "email": "vivek@example.com",
+  "password": "123456"
+}
+
+GET http://localhost:5000/api/users
+Content-Type: application/json
+
+### LOGIN (get fresh token)
+POST http://localhost:5000/api/users/login
+Content-Type: application/json
+
+{
+  "email": "vivek@example.com",
+  "password": "123456"
+}
+
+###
+
+### PROFILE (protected route — replace token below)
+GET http://localhost:5000/api/users/profile
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5MGI3ZDEyMjA5NzA3ZGVhNDMwZTlkNyIsImVtYWlsIjoidml2ZWtAZXhhbXBsZS5jb20iLCJpYXQiOjE3NjIzNjQyNDUsImV4cCI6MTc2MjM3MTQ0Mn0.pJ4y6BzS3dxTnJtFZ1FQJ8pPpSY6u4oEYvOBo1ihKiE
+
+

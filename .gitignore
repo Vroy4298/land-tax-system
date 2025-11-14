@@ -1,14 +1,26 @@
 # Node modules
+backend/node_modules/
+frontend/node_modules/
 node_modules/
 
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Environment files
-.env
+# Environment variables
+backend/.env
+frontend/.env
 
 # Build output
-dist/
-build/
+frontend/dist/
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+
+# System files
+.DS_Store
+
+# Editor folders
+.vscode/
+.idea/
+
+# backup / generated
+*.tmp
