@@ -18,6 +18,10 @@ function Login() {
     e.preventDefault();
     if (loading) return;
     setLoading(true);
+    if (localStorage.getItem("token")) {
+  window.location.href = "/dashboard";
+}
+
 
     try {
         const response = await fetch("http://localhost:5000/api/users/login", {

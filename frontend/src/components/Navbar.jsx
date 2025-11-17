@@ -5,9 +5,10 @@ function Navbar() {
   const token = localStorage.getItem("token");
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
+  localStorage.removeItem("token");
+  window.location.href = "/login";
+};
+
 
   return (
     <nav className="bg-blue-600 text-white py-3 shadow-md">
@@ -26,11 +27,12 @@ function Navbar() {
 
           {token ? (
             <button
-              onClick={handleLogout}
-              className="bg-white text-blue-600 px-3 py-1 rounded-md hover:bg-gray-100 transition"
-            >
-              Logout
-            </button>
+  onClick={handleLogout}
+  className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 ml-4"
+>
+  Logout
+</button>
+
           ) : (
             <>
               <Link to="/login" className="hover:text-gray-200">Login</Link>

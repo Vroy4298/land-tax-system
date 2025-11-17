@@ -15,6 +15,11 @@ function Register() {
     if (loading) return; // 🛑 Prevent multiple submissions
     setLoading(true);
     setMessage("⏳ Registering...");
+    
+    if (localStorage.getItem("token")) {
+  window.location.href = "/dashboard";
+}
+
 
     try {
       const response = await fetch("http://localhost:5000/api/users/register", {

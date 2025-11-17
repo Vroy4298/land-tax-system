@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+
 
 function PropertyList() {
   const [properties, setProperties] = useState([]);
-  const [loading, setLoading] = useState(true);  // 👈 NEW
+  const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -17,14 +19,17 @@ function PropertyList() {
 
         if (res.ok) {
           setProperties(data);
-          if (data.length === 0) setMessage("No properties found.");
+
+          if (data.length === 0) {
+            setMessage("No properties found.");
+          }
         } else {
           setMessage("❌ Failed to load properties");
         }
       } catch {
         setMessage("❌ Network error");
       } finally {
-        setLoading(false); // 👈 Stop loading
+        setLoading(false);
       }
     };
 
@@ -67,6 +72,23 @@ function PropertyList() {
             <p>Area: {prop.area} sq ft</p>
             <p>Tax: ₹{prop.taxAmount}</p>
 
+    <Link
+  to={`/property/${prop._id}`}
+  className="mt-2 bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600 mr-2 inline-block"
+>
+  View
+</Link>
+
+
+            {/* EDIT BUTTON */}
+            <a
+              href={`/edit-property/${prop._id}`}
+              className="mt-2 bg-yellow-500 text-white px-4 py-1 rounded hover:bg-yellow-600 mr-2 inline-block"
+            >
+              Edit
+            </a>
+
+            {/* DELETE BUTTON */}
             <button
               onClick={() => handleDelete(prop._id)}
               className="mt-2 bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600"

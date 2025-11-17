@@ -66,3 +66,31 @@ export const deleteProperty = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 };
+export const getPropertyById = async (req, res) => {
+  try {
+    const propertyId = req.params.id;
+    const userId = req.user.id;
+
+    // Validate ObjectId
+    if (!ObjectId.isValid(propertyId)) {
+      return res.status(400).json({ error: "Invalid property ID" });
+    }
+
+    const collection = getPropertyCollection();
+
+    const property = await collection.findOne({
+      _id: new ObjectId(propertyId),
+      owner: userId   // Only allow owner to fetch
+    });
+
+    if (!property) {
+      return res.status(404).json({ error: "Property not found" });
+    }
+
+    res.status(200).json(property);
+
+  } catch (err) {
+    console.error("Get property by ID error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
