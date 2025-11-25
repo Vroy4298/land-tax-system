@@ -59,7 +59,7 @@ function Register() {
             value={form.name}
             onChange={handleChange}
             placeholder="Full Name"
-            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full p-3 border rounded-md text-black focus:ring-2 focus:ring-blue-400"
             required
           />
           <input
@@ -68,7 +68,7 @@ function Register() {
             value={form.email}
             onChange={handleChange}
             placeholder="Email"
-            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full p-3 border rounded-md text-black focus:ring-2 focus:ring-blue-400"
             required
           />
           <input
@@ -77,7 +77,7 @@ function Register() {
             value={form.password}
             onChange={handleChange}
             placeholder="Password"
-            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full p-3 border rounded-md text-black focus:ring-2 focus:ring-blue-400"
             required
           />
 
