@@ -55,7 +55,7 @@ function App() {
             }
           />
           <Route
-  path="/edit-property/:id"
+  path="/properties/:id/edit"
   element={
     <PrivateRoute>
       <EditProperty />
@@ -63,13 +63,14 @@ function App() {
   }
 />
 <Route
-  path="/property/:id"
+  path="/properties/:id"
   element={
     <PrivateRoute>
       <PropertyDetails />
     </PrivateRoute>
   }
 />
+
 
 
         </Routes>

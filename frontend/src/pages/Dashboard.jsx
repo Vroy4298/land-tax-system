@@ -1,99 +1,92 @@
-
 import { useEffect, useState } from "react";
 
-function Dashboard() {
+export default function Dashboard() {
   const [user, setUser] = useState(null);
-  const [properties, setProperties] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalProperties: 0,
+    totalTax: 0,
+  });
 
   useEffect(() => {
-    const fetchDashboard = async () => {
+    const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
 
         // Fetch user profile
-        const userRes = await fetch("http://localhost:5000/api/users/me", {
+        const userRes = await fetch("http://localhost:5000/api/users/profile", {
+
           headers: { Authorization: `Bearer ${token}` },
         });
         const userData = await userRes.json();
+        setUser(userData);
 
-        // Fetch properties
+        // Fetch properties for stats
         const propRes = await fetch("http://localhost:5000/api/properties", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const propData = await propRes.json();
+        const properties = await propRes.json();
 
-        if (userRes.ok) setUser(userData);
-        if (propRes.ok) setProperties(propData);
+        // Calculate stats
+        const totalTax = properties.reduce(
+          (sum, p) => sum + (p.finalTaxAmount || 0),
+          0
+        );
 
-      } catch (error) {
-        console.error("Dashboard error:", error);
-      } finally {
-        setLoading(false);
+        setStats({
+          totalProperties: properties.length,
+          totalTax: totalTax,
+        });
+      } catch (err) {
+        console.error("Dashboard error:", err);
       }
     };
 
-    fetchDashboard();
+    fetchData();
   }, []);
 
-  if (loading || !user) {
-    return <p className="text-center mt-10">Loading dashboard...</p>;
-  }
+  if (!user) return <p className="page-offset text-gray-500">Loading...</p>;
 
-  // --------- CALCULATIONS ----------
-  const totalProperties = properties.length;
-  const totalTax = properties.reduce((sum, p) => sum + Number(p.taxAmount || 0), 0);
-
-  const recentProperties = properties.slice(-3).reverse();
+  const formatINR = (num) =>
+    "₹" + Number(num).toLocaleString("en-IN", { maximumFractionDigits: 0 });
 
   return (
-    <div className="p-8 bg-gray-100 min-h-screen">
-      <h1 className="text-3xl font-bold mb-4 text-blue-600">
-        👋 Welcome, {user.name}
-      </h1>
-
-      {/* ---- CARDS ---- */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-6">
-        
-        <div className="bg-white p-6 rounded-xl shadow">
-          <h2 className="text-xl font-semibold text-gray-600">Total Properties</h2>
-          <p className="text-3xl font-bold text-blue-600 mt-2">{totalProperties}</p>
-        </div>
-
-        <div className="bg-white p-6 rounded-xl shadow">
-          <h2 className="text-xl font-semibold text-gray-600">Total Tax Amount</h2>
-          <p className="text-3xl font-bold text-green-600 mt-2">₹{totalTax}</p>
-        </div>
-
-        <div className="bg-white p-6 rounded-xl shadow">
-          <h2 className="text-xl font-semibold text-gray-600">Recent Added</h2>
-          <p className="text-3xl font-bold text-purple-600 mt-2">
-            {recentProperties.length}
-          </p>
-        </div>
-
+    <div className="max-w-6xl mx-auto p-6 page-offset">
+      {/* Greeting Card */}
+      <div className="glass-card p-6 mb-8 rounded-xl">
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">
+          Welcome back, {user.name.split(" ")[0]} 👋
+        </h1>
+        <p className="text-gray-600">
+          Manage your land records, tax details, and more — all in one place.
+        </p>
       </div>
 
-      {/* ---- RECENT PROPERTIES ---- */}
-      <div className="mt-10">
-        <h2 className="text-2xl font-bold mb-3">🕒 Recent Properties</h2>
-
-        {recentProperties.length === 0 ? (
-          <p>No recent properties.</p>
-        ) : (
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {recentProperties.map((p) => (
-              <div key={p._id} className="bg-white shadow rounded-xl p-4">
-                <h3 className="font-bold text-lg">{p.ownerName}</h3>
-                <p>{p.propertyAddress}</p>
-                <p>Tax: ₹{p.taxAmount}</p>
-              </div>
-            ))}
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Total Properties */}
+        <div className="glass-card p-6 rounded-xl shadow hover:shadow-lg transition">
+          <div className="text-gray-500 mb-1 text-sm">Total Properties</div>
+          <div className="text-3xl font-bold text-blue-600">
+            {stats.totalProperties}
           </div>
-        )}
+        </div>
+
+        {/* Total Tax */}
+        <div className="glass-card p-6 rounded-xl shadow hover:shadow-lg transition">
+          <div className="text-gray-500 mb-1 text-sm">Total Tax Due</div>
+          <div className="text-3xl font-bold text-blue-600">
+            {formatINR(stats.totalTax)}
+          </div>
+        </div>
+
+        {/* User Email */}
+        <div className="glass-card p-6 rounded-xl shadow hover:shadow-lg transition">
+          <div className="text-gray-500 mb-1 text-sm">Your Email</div>
+          <div className="text-lg font-semibold text-gray-700">
+            {user.email}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
-
-export default Dashboard;
