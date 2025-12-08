@@ -3,11 +3,11 @@ import { ObjectId } from "mongodb";
 
 let propertyCollection = null;
 
-// ALWAYS return a real MongoDB collection
+// Return MongoDB "properties" collection
 export async function getPropertyCollection() {
   if (!propertyCollection) {
-    const db = await connectDB();       // MUST await
-    propertyCollection = db.collection("properties"); // MUST be collection()
+    const db = await connectDB();
+    propertyCollection = db.collection("properties");
   }
   return propertyCollection;
 }
@@ -26,7 +26,12 @@ export const buildPropertyDocument = (data, userId) => {
     constructionYear,
   } = data;
 
-  // Base Rates
+  /* ---------------- NORMALIZATION ---------------- */
+  const cleanType = String(propertyType).toLowerCase();   
+  const cleanUsage = String(usageType).toLowerCase();    
+  const cleanZone = String(zone).toUpperCase();           
+
+  /* ---------------- BASE RATES ---------------- */
   const baseRates = {
     residential: 2.5,
     commercial: 5,
@@ -34,23 +39,31 @@ export const buildPropertyDocument = (data, userId) => {
     agriculture: 1.5,
   };
 
-  // Multipliers
+  /* ---------------- MULTIPLIERS ---------------- */
   const zoneMultiplier = { A: 1.3, B: 1.1, C: 1.0 };
-  const usageMultiplier = { self: 1.0, rented: 1.2, mixed: 1.1 };
 
-  // Age factor
+  const usageMultiplier = {
+    self: 1.0,
+    rented: 1.2,
+    mixed: 1.1,
+    commercial: 1.3,  
+  };
+
+  /* ---------------- AGE FACTOR ---------------- */
   const currentYear = new Date().getFullYear();
   const age = currentYear - Number(constructionYear);
+
   let ageFactor = 1.0;
   if (age >= 11 && age <= 20) ageFactor = 0.9;
   else if (age >= 21 && age <= 30) ageFactor = 0.8;
   else if (age > 30) ageFactor = 0.7;
 
+  /* ---------------- FINAL TAX ---------------- */
   const finalTaxAmount =
     Number(builtUpArea) *
-    baseRates[propertyType] *
-    zoneMultiplier[zone] *
-    usageMultiplier[usageType] *
+    (baseRates[cleanType] || 1) *
+    (zoneMultiplier[cleanZone] || 1) *
+    (usageMultiplier[cleanUsage] || 1) *
     ageFactor;
 
   return {
@@ -58,21 +71,27 @@ export const buildPropertyDocument = (data, userId) => {
     ownerPhone,
     ownerEmail,
     address,
-    propertyType,
-    usageType,
-    zone,
+
+    propertyType: cleanType,
+    usageType: cleanUsage,
+    zone: cleanZone,
+
     builtUpArea,
     constructionYear,
 
-    baseRate: baseRates[propertyType],
-    zoneMultiplier: zoneMultiplier[zone],
-    usageMultiplier: usageMultiplier[usageType],
+    baseRate: baseRates[cleanType] || null,
+    zoneMultiplier: zoneMultiplier[cleanZone] || null,
+    usageMultiplier: usageMultiplier[cleanUsage] || null,
     ageFactor,
     finalTaxAmount: Math.round(finalTaxAmount),
 
     paymentStatus: "pending",
+    paymentDate: null,
+    receiptId: null,
+
     createdAt: new Date(),
     updatedAt: new Date(),
+
     owner: new ObjectId(userId),
   };
 };

@@ -34,6 +34,8 @@ export default function Navbar() {
               <Link to="/dashboard" className={location.pathname === "/dashboard" ? activeLink : normalLink}>Dashboard</Link>
               <Link to="/properties" className={location.pathname === "/properties" ? activeLink : normalLink}>Properties</Link>
               <Link to="/add-property" className={location.pathname === "/add-property" ? activeLink : normalLink}>Add Property</Link>
+              <Link to="/payment-history" className="hover:text-blue-600 transition"> Payment History</Link>
+
             </>
           )}
 

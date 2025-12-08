@@ -11,6 +11,8 @@ import Navbar from "./components/Navbar";
 import PrivateRoute from "./components/PrivateRoute";
 import EditProperty from "./pages/EditProperty";
 import PropertyDetails from "./pages/PropertyDetails";
+import PaymentHistory from "./pages/PaymentHistory.jsx";
+
 
 
 function App() {
@@ -26,6 +28,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/payment-history" element={<PaymentHistory />} />
+
 
           {/* PROTECTED ROUTES */}
           <Route

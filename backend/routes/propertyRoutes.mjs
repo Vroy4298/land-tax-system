@@ -1,30 +1,41 @@
 import express from "express";
-import { verifyToken } from "../utils/jwt.mjs";
 import {
   addProperty,
   getMyProperties,
   getPropertyById,
   updateProperty,
-  deleteProperty
+  deleteProperty,
+  markAsPaid,
+  downloadReceipt
 } from "../controllers/propertyController.mjs";
+
+import { authMiddleware } from "../middleware/authMiddleware.mjs";
 
 const router = express.Router();
 
+// Protect all property routes
+router.use(authMiddleware);
+
 // Add property
-router.post("/", verifyToken, addProperty);
+router.post("/", addProperty);
 
 // Get all properties for logged-in user
-router.get("/", verifyToken, getMyProperties);
+router.get("/", getMyProperties);
 
-// Get a single property
-router.get("/:id", verifyToken, getPropertyById);
+// Get property by ID
+router.get("/:id", getPropertyById);
 
-// Delete a property
-router.delete("/:id", verifyToken, deleteProperty);
+// Update property
+router.put("/:id", updateProperty);
 
-// Update a property
-router.put("/:id", verifyToken, updateProperty);
+// Delete property
+router.delete("/:id", deleteProperty);
 
+// Mark as paid
+router.post("/:id/mark-paid", markAsPaid);
 
-// export
-export { router as handlePropertyRoutes };
+// Download receipt
+router.get("/:id/receipt", downloadReceipt);
+
+// 🚀 MOST IMPORTANT LINE
+export default router;

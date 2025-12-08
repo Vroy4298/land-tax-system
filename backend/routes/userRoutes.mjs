@@ -1,13 +1,11 @@
 import express from "express";
 import { registerUser, loginUser, getProfile } from "../controllers/userController.mjs";
-import { verifyToken } from "../utils/jwt.mjs";
+import { authMiddleware } from "../middleware/authMiddleware.mjs";
 
 const router = express.Router();
 
-// routes
 router.post("/register", registerUser);
 router.post("/login", loginUser);
-router.get("/profile", verifyToken, getProfile);
+router.get("/profile", authMiddleware, getProfile);
 
-// IMPORTANT: correct named export
-export const handleUserRoutes = router;
+export default router;

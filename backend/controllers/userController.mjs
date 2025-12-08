@@ -1,6 +1,5 @@
 import bcrypt from "bcryptjs";
 import { connectDB } from "../db.mjs";
-
 import { generateToken } from "../utils/jwt.mjs";
 import { ObjectId } from "mongodb";
 
@@ -27,7 +26,10 @@ export const registerUser = async (req, res) => {
       createdAt: new Date(),
     });
 
-    return res.status(201).json({ message: "Registered", userId: result.insertedId });
+    return res.status(201).json({ 
+      message: "Registered",
+      userId: result.insertedId 
+    });
   } catch (err) {
     console.error("Register error:", err);
     return res.status(500).json({ error: "Registration failed" });
@@ -54,7 +56,11 @@ export const loginUser = async (req, res) => {
 
     const token = generateToken(user);
 
-    return res.status(200).json({ token });
+    return res.status(200).json({
+      message: "Login successful",
+      token,
+      user: { id: user._id, name: user.name, email: user.email },
+    });
   } catch (err) {
     console.error("Login error:", err);
     return res.status(500).json({ error: "Login failed" });
