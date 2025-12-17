@@ -215,7 +215,13 @@ export const downloadReceipt = async (req, res) => {
 
     if (!p) return res.status(404).json({ error: "Property not found" });
 
-    const doc = new PDFDocument({ margin: 50 });
+    /* ---------------- SETUP DOCUMENT ---------------- */
+    // Standard A4 size: 595.28 x 841.89 points
+    const doc = new PDFDocument({ margin: 50, size: "A4" });
+    const pageWidth = 595.28;
+    const pageHeight = 841.89;
+    const centerX = pageWidth / 2;
+    const margin = 50;
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
@@ -225,162 +231,173 @@ export const downloadReceipt = async (req, res) => {
 
     doc.pipe(res);
 
-    /* ---------------- WATERMARK (fixed) ---------------- */
-const pageW = doc.page.width;
-const pageH = doc.page.height;
+    /* ---------------- WATERMARK ---------------- */
+    // Rotated, centered, faint watermark
+    doc.save();
+    doc.font("Helvetica-Bold")
+       .fontSize(60)
+       .fillColor("#e6e6e6")
+       .opacity(0.10); // Subtle but visible
 
-// draw watermark centered, rotated, non-wrapping and faint
-doc.save(); // save graphics state
+    doc.rotate(45, { origin: [centerX, pageHeight / 2] });
+    doc.text("OFFICIAL RECEIPT", centerX - 300, pageHeight / 2, {
+      width: 600,
+      align: "center",
+      lineBreak: false,
+    });
+    doc.restore();
 
-doc.font("Helvetica-Bold")
-   .fontSize(60)
-   .fillColor("#e6e6e6")
-   .opacity(0.08);
+    /* ---------------- HEADER SECTION ---------------- */
+    let currentY = 50;
 
-// rotate around page center
-doc.rotate(30, { origin: [pageW / 2, pageH / 2] });
-
-// prevent line wrapping by using a wide width and disabling lineBreak
-doc.text("LAND TAX SYSTEM", (pageW / 2) - 300, (pageH / 2) - 20, {
-  width: 600,
-  align: "center",
-  lineBreak: false,
-});
-
-doc.restore(); // restore graphics state so rotation/opacity don't affect later content
-
-
-    /* ---------------- LOGO ---------------- */
+    // 1. Logo (Centered)
     const logoPath = path.resolve("assets/logo.png");
     if (fs.existsSync(logoPath)) {
-      doc.image(logoPath, {
-        fit: [80, 80],
-        align: "center",
-        valign: "center",
-      });
-      doc.moveDown(0.5);
+      doc.image(logoPath, centerX - 30, currentY, { width: 60 });
+      currentY += 70;
+    } else {
+      currentY += 20; // Fallback if no logo
     }
 
-    /* ---------------- HEADER ---------------- */
-    doc
-      .fontSize(24)
-      .fillColor("#1a237e")
-      .text("LAND TAX PAYMENT RECEIPT", {
-        align: "center",
-        underline: true,
-      });
+    // 2. Title & Subtitle
+    doc.fontSize(18)
+       .font("Helvetica-Bold")
+       .fillColor("#1a237e") // Official Blue
+       .text("LAND TAX PAYMENT RECEIPT", 0, currentY, { align: "center" });
+    
+    currentY += 25;
 
-    doc.moveDown(0.5);
+    doc.fontSize(10)
+       .font("Helvetica")
+       .fillColor("#6b7280") // Slate Gray
+       .text("Government Authorized Digital Record", 0, currentY, { align: "center" });
 
-    doc
-      .fontSize(12)
-      .fillColor("gray")
-      .text("Government Authorized Digital Receipt", {
-        align: "center",
-      });
+    currentY += 20;
 
-    doc.moveDown();
-    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-    doc.moveDown(1.2);
+    // 3. Divider Line
+    doc.moveTo(margin, currentY)
+       .lineTo(pageWidth - margin, currentY)
+       .strokeColor("#e5e7eb")
+       .lineWidth(1)
+       .stroke();
+    
+    currentY += 20;
 
-    /* ---------------- RECEIPT INFO ---------------- */
-    doc
-      .fontSize(14)
-      .fillColor("black")
-      .text(`Receipt ID: ${p.receiptId}`)
-      .moveDown(0.3);
+    /* ---------------- META INFO ROW ---------------- */
+    // Two columns: Receipt ID (Left) | Date (Right)
+    const metaY = currentY;
+    
+    // Left
+    doc.font("Helvetica-Bold").fontSize(10).fillColor("#374151").text("Receipt ID:", margin, metaY);
+    doc.font("Helvetica").fontSize(10).fillColor("#000000").text(p.receiptId || "N/A", margin + 70, metaY);
 
-    doc.text(`Payment Date: ${new Date(p.paymentDate).toLocaleString()}`);
+    // Right (Right aligned relative to right margin)
+    doc.font("Helvetica-Bold").fontSize(10).fillColor("#374151").text("Date:", 350, metaY);
+    doc.font("Helvetica").fontSize(10).text(new Date(p.paymentDate).toLocaleDateString(), 390, metaY);
 
-    doc.moveDown(1);
-    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-    doc.moveDown(1);
+    currentY += 40;
 
     /* ---------------- PROPERTY DETAILS ---------------- */
-    doc
-      .fontSize(16)
-      .fillColor("#1a237e")
-      .text("Property Details", { underline: true });
+    // Section Header Box
+    doc.rect(margin, currentY, pageWidth - (margin * 2), 25).fill("#f3f4f6");
+    doc.fillColor("#1a237e").font("Helvetica-Bold").fontSize(11).text("PROPERTY DETAILS", margin + 10, currentY + 7);
+    
+    currentY += 35;
 
-    doc.moveDown(0.8).fontSize(12).fillColor("black");
+    // Helper for rows
+    const drawRow = (label, value, y) => {
+      doc.font("Helvetica").fontSize(10).fillColor("#6b7280").text(label, margin, y);
+      doc.font("Helvetica-Bold").fontSize(10).fillColor("#111827").text(value || "N/A", margin + 140, y);
+    };
 
-    doc.text(`Owner Name: ${p.ownerName}`);
-    doc.text(`Address: ${p.address}`);
-    doc.text(`Zone: ${p.zone}`);
-    doc.text(`Property Type: ${p.propertyType}`);
-    doc.text(`Usage Type: ${p.usageType}`);
-    doc.text(`Built-up Area: ${p.builtUpArea} sq ft`);
+    drawRow("Owner Name", p.ownerName, currentY); 
+    currentY += 20;
 
-    doc.moveDown(1);
-    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-    doc.moveDown(1);
+    // Address (Handle wrap)
+    doc.font("Helvetica").fillColor("#6b7280").text("Address", margin, currentY);
+    doc.font("Helvetica-Bold").fillColor("#111827").text(p.address, margin + 140, currentY, { width: 300 });
+    const addrHeight = doc.heightOfString(p.address, { width: 300 });
+    currentY += Math.max(20, addrHeight + 10);
 
-    /* ---------------- TAX DETAILS ---------------- */
-    doc
-      .fontSize(16)
-      .fillColor("#1a237e")
-      .text("Tax Details", { underline: true });
+    // Grid Layout for Specs
+    const col1X = margin;
+    const col1ValX = margin + 80;
+    const col2X = 320;
+    const col2ValX = 400;
 
-    doc.moveDown(0.8).fontSize(12).fillColor("black");
+    // Row 1
+    doc.font("Helvetica").fillColor("#6b7280").text("Type", col1X, currentY);
+    doc.font("Helvetica-Bold").fillColor("#111827").text(p.propertyType, col1ValX, currentY);
+    
+    doc.font("Helvetica").fillColor("#6b7280").text("Zone", col2X, currentY);
+    doc.font("Helvetica-Bold").fillColor("#111827").text(p.zone, col2ValX, currentY);
+    currentY += 20;
 
-    doc.text(`Base Rate: ₹${p.baseRate}`);
-    doc.text(`Zone Multiplier: ${p.zoneMultiplier}`);
-    doc.text(`Usage Multiplier: ${p.usageMultiplier}`);
-    doc.text(`Age Factor: ${p.ageFactor}`);
+    // Row 2
+    doc.font("Helvetica").fillColor("#6b7280").text("Usage", col1X, currentY);
+    doc.font("Helvetica-Bold").fillColor("#111827").text(p.usageType, col1ValX, currentY);
 
-    doc.moveDown();
+    doc.font("Helvetica").fillColor("#6b7280").text("Area", col2X, currentY);
+    doc.font("Helvetica-Bold").fillColor("#111827").text(`${p.builtUpArea} sq ft`, col2ValX, currentY);
+    
+    currentY += 40;
 
-    doc
-      .fontSize(14)
-      .fillColor("#2e7d32")
-      .text(`Final Tax Amount: ₹${p.finalTaxAmount}`, {
-        underline: true,
-      });
+    /* ---------------- TAX CALCULATION ---------------- */
+    // Section Header Box
+    doc.rect(margin, currentY, pageWidth - (margin * 2), 25).fill("#f3f4f6");
+    doc.fillColor("#1a237e").font("Helvetica-Bold").fontSize(11).text("TAX BREAKDOWN", margin + 10, currentY + 7);
+    currentY += 35;
+
+    // Right-aligned amounts for financial look
+    const drawCalcRow = (label, value) => {
+      doc.font("Helvetica").fontSize(10).fillColor("#6b7280").text(label, margin, currentY);
+      doc.font("Helvetica").fontSize(10).fillColor("#111827").text(value, 450, currentY, { width: 95, align: "right" });
+      currentY += 18;
+    };
+
+    drawCalcRow("Base Rate", `₹ ${p.baseRate}`);
+    drawCalcRow("Zone Multiplier", `x ${p.zoneMultiplier}`);
+    drawCalcRow("Usage Multiplier", `x ${p.usageMultiplier}`);
+    drawCalcRow("Age Factor", `x ${p.ageFactor}`);
+    
+    currentY += 10;
+
+    // Divider Line
+    doc.moveTo(350, currentY).lineTo(pageWidth - margin, currentY).strokeColor("#000000").lineWidth(0.5).stroke();
+    currentY += 10;
+
+    // Final Total Box
+    doc.rect(340, currentY - 5, 205, 30).fill("#e0e7ff"); // Blue highlight
+    doc.fillColor("#1a237e").font("Helvetica-Bold").fontSize(12).text("TOTAL PAID", 355, currentY + 4);
+    doc.fillColor("#1a237e").fontSize(14).text(`₹ ${p.finalTaxAmount}`, 450, currentY + 2, { width: 85, align: "right" });
+
+    currentY += 60;
 
     /* ---------------- QR CODE ---------------- */
-    const qrData = `
-Receipt ID: ${p.receiptId}
-Property ID: ${propertyId}
-Amount: ₹${p.finalTaxAmount}
-Paid On: ${new Date(p.paymentDate).toLocaleString()}
-`;
+    // Prevent QR from falling off page
+    if (currentY > pageHeight - 150) {
+      doc.addPage();
+      currentY = 50;
+    }
 
+    const qrData = `Receipt: ${p.receiptId} | Amount: ₹${p.finalTaxAmount} | Date: ${new Date(p.paymentDate).toISOString()}`;
     const qrImage = await QRCode.toDataURL(qrData);
 
-    doc.moveDown(1);
-    doc
-      .fontSize(14)
-      .fillColor("#1a237e")
-      .text("Scan for Receipt Details", { align: "center" });
+    const qrSize = 100;
+    const qrX = (pageWidth - qrSize) / 2;
 
-    doc.moveDown(0.5);
+    doc.image(qrImage, qrX, currentY, { width: qrSize });
+    currentY += qrSize + 10;
 
-    doc.image(qrImage, {
-      fit: [120, 120],
-      align: "center",
-    });
-
-    doc.moveDown(1.5);
+    doc.font("Helvetica").fontSize(9).fillColor("#6b7280").text("Scan to verify details", 0, currentY, { align: "center" });
 
     /* ---------------- FOOTER ---------------- */
-    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-
-    doc
-      .fontSize(12)
-      .fillColor("gray")
-      .text(
-        "This is a system-generated receipt and does not require a physical signature.",
-        { align: "center" }
-      );
-
-    doc.moveDown(0.5);
-
-    doc
-      .fontSize(10)
-      .fillColor("lightgray")
-      .text("© 2025 Land Tax System - Digital Tax Automation Platform", {
-        align: "center",
-      });
+    const footerY = pageHeight - 60;
+    doc.moveTo(margin, footerY).lineTo(pageWidth - margin, footerY).strokeColor("#e5e7eb").lineWidth(1).stroke();
+    
+    doc.fontSize(8).fillColor("#9ca3af")
+       .text("This receipt is computer generated and valid without a physical signature.", 0, footerY + 10, { align: "center" });
+    doc.text("© 2025 Land Tax System | Secure Digital Records", 0, footerY + 22, { align: "center" });
 
     doc.end();
   } catch (err) {

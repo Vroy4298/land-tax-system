@@ -1,56 +1,115 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { Sun, Moon } from "lucide-react";
 
 export default function Navbar() {
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [dark, setDark] = useState(
+    document.documentElement.classList.contains("dark")
+  );
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token =
+      localStorage.getItem("token") || sessionStorage.getItem("token");
     setIsLoggedIn(!!token);
   }, [location.pathname]);
 
   const logout = () => {
-    localStorage.removeItem("token");
+    localStorage.clear();
+    sessionStorage.clear();
     window.location.href = "/login";
+  };
+
+  const toggleTheme = () => {
+    document.documentElement.classList.toggle("dark");
+    setDark(!dark);
   };
 
   const activeLink = "nav-active";
   const normalLink = "nav-link";
 
   return (
-    <header className="fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-6xl z-50">
-      <div className="glass-card flex items-center justify-between px-6 py-3">
-        <Link to="/" className="text-xl font-bold text-gray-700">
-          <span className="text-gray-500">LandTax</span>{" "}
-          <span className="text-[#2563EB]">System</span>
+    <header className="fixed top-0 left-0 w-full z-50 border-b border-gray-200 dark:border-slate-700 bg-white/90 dark:bg-[#0b1220]/90 backdrop-blur">
+      <div className="max-w-7xl mx-auto px-8 py-4 flex items-center justify-between">
+        {/* LOGO */}
+        <Link to="/" className="text-xl font-bold">
+          <span className="text-gray-500 dark:text-gray-300">LandTax</span>{" "}
+          <span className="text-blue-600 dark:text-blue-400">System</span>
         </Link>
 
-        <nav className="flex items-center gap-6">
-          <Link to="/" className={location.pathname === "/" ? activeLink : normalLink}>Home</Link>
+        {/* NAV LINKS */}
+        <nav className="flex items-center gap-6 whitespace-nowrap">
+          <Link to="/" className={location.pathname === "/" ? activeLink : normalLink}>
+            Home
+          </Link>
 
           {isLoggedIn && (
             <>
-              <Link to="/dashboard" className={location.pathname === "/dashboard" ? activeLink : normalLink}>Dashboard</Link>
-              <Link to="/properties" className={location.pathname === "/properties" ? activeLink : normalLink}>Properties</Link>
-              <Link to="/add-property" className={location.pathname === "/add-property" ? activeLink : normalLink}>Add Property</Link>
-              <Link to="/payment-history" className="hover:text-blue-600 transition"> Payment History</Link>
-
+              <Link
+                to="/dashboard"
+                className={location.pathname === "/dashboard" ? activeLink : normalLink}
+              >
+                Dashboard
+              </Link>
+              <Link
+                to="/properties"
+                className={location.pathname === "/properties" ? activeLink : normalLink}
+              >
+                Properties
+              </Link>
+              <Link
+                to="/add-property"
+                className={location.pathname === "/add-property" ? activeLink : normalLink}
+              >
+                Add Property
+              </Link>
+              <Link
+                to="/payment-history"
+                className={location.pathname === "/payment-history" ? activeLink : normalLink}
+              >
+                Payment History
+              </Link>
             </>
           )}
 
           {!isLoggedIn && (
             <>
-              <Link to="/login" className={location.pathname === "/login" ? activeLink : normalLink}>Login</Link>
-              <Link to="/register" className={location.pathname === "/register" ? activeLink : normalLink}>Register</Link>
+              <Link
+                to="/login"
+                className={location.pathname === "/login" ? activeLink : normalLink}
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
+                className={location.pathname === "/register" ? activeLink : normalLink}
+              >
+                Register
+              </Link>
             </>
           )}
 
-          {isLoggedIn && (
-            <button onClick={logout} className="ml-2 btn-primary">
-              Logout
+          {/* RIGHT ACTIONS */}
+          <div className="flex items-center gap-4 ml-2">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition"
+              title="Toggle theme"
+            >
+              {dark ? (
+                <Sun className="w-5 h-5 text-yellow-400" />
+              ) : (
+                <Moon className="w-5 h-5 text-gray-700" />
+              )}
             </button>
-          )}
+
+            {isLoggedIn && (
+              <button onClick={logout} className="btn-primary">
+                Logout
+              </button>
+            )}
+          </div>
         </nav>
       </div>
     </header>

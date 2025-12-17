@@ -2,64 +2,71 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Theme variables (Light Luxury) */
-:root{
-  --bg: #F7F9FB;        /* page background */
-  --card: #FFFFFF;      /* card background */
-  --muted: #64748b;     /* muted text */
-  --primary: #2563EB;   /* primary blue */
-  --primary-600: #1e40af;
-  --accent: #06b6d4;    /* cyan accent */
-  --glass: rgba(255,255,255,0.6);
-}
-
-/* Base */
-html,body,#root {
-  height:100%;
-}
+/* Base backgrounds */
 body {
-  background: var(--bg);
-  color: #0f172a; /* dark text */
-  -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  @apply bg-gray-50 dark:bg-[#0b1220] text-gray-900 dark:text-gray-100 transition-colors;
 }
 
-/* Glass card used often */
+/* Glass card */
 .glass-card {
-  background: var(--card);
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(2,6,23,0.06);
-  border: 1px solid rgba(2,6,23,0.04);
+  @apply bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-md shadow-md 
+         border border-slate-200 dark:border-slate-700 
+         rounded-xl transition-all;
 }
 
-/* Navbar-specific helpers */
-.nav-link {
-  @apply text-gray-500 hover:text-[#2563EB] transition;
-}
-.nav-active {
-  @apply text-[#2563EB] font-semibold;
-}
-
-/* Forms */
+/* Inputs */
 input, textarea, select {
-  @apply bg-white border rounded px-4 py-2 text-sm text-gray-700;
-  border-color: rgba(2,6,23,0.06);
-  outline: none;
-}
-input:focus, textarea:focus {
-  @apply ring-2 ring-[#bfdbfe] border-[#93c5fd];
+  @apply transition-colors bg-white dark:bg-slate-800 
+         border border-gray-300 dark:border-slate-700
+         text-gray-800 dark:text-gray-100 rounded px-4 py-2;
 }
 
-/* Utility to avoid content hiding behind fixed navbar */
+input:focus, textarea:focus, select:focus {
+  @apply ring-2 ring-blue-400 dark:ring-blue-600 outline-none;
+}
+
+/* Table support */
+html.dark th { @apply bg-slate-800 text-gray-300; }
+html.dark td { @apply bg-slate-900 text-gray-300; }
+
+/* Navbar link styles */
+.nav-link {
+  @apply text-gray-500 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400;
+}
+
+.nav-active {
+  @apply text-blue-600 dark:text-blue-400 font-semibold;
+}
+
+/* Page offset */
 .page-offset {
-  padding-top: 6rem; /* 96px - matches navbar height */
+  padding-top: 6rem;
 }
 
-/* Tiny helpers */
-.btn-primary {
-  @apply bg-[#2563EB] text-white px-4 py-2 rounded shadow-sm hover:bg-[#1e40af] transition;
+/* Shake animation */
+.shake {
+  animation: shake 0.3s ease-in-out;
 }
-.btn-secondary {
-  @apply border border-gray-200 px-4 py-2 rounded text-gray-700 hover:bg-gray-50 transition;
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-4px); }
+  100% { transform: translateX(0); }
 }
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+

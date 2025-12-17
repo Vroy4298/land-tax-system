@@ -1,18 +1,22 @@
 import { Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
+
 import Home from "./pages/Home";
-import Register from "./pages/Register";
-import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import PropertyList from "./pages/PropertyList";
-import AddProperty from "./pages/AddProperty";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Navbar from "./components/Navbar";
-import PrivateRoute from "./components/PrivateRoute";
-import EditProperty from "./pages/EditProperty";
 import PropertyDetails from "./pages/PropertyDetails";
-import PaymentHistory from "./pages/PaymentHistory.jsx";
+import EditProperty from "./pages/EditProperty";
+import AddProperty from "./pages/AddProperty";
+import PaymentHistory from "./pages/PaymentHistory";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
+
+
+
+import ProtectedRoute from "./components/ProtectedRoute";
 
 
 function App() {
@@ -20,63 +24,70 @@ function App() {
     <>
       <Navbar />
 
-      <div className="min-h-screen bg-gray-50">
+      {/* App background only — pages control layout */}
+      <div className="min-h-screen bg-gray-50 dark:bg-[#0b1220] transition-colors duration-300">
         <Routes>
-          {/* PUBLIC ROUTES */}
           <Route path="/" element={<Home />} />
-          <Route path="/register" element={<Register />} />
+
           <Route path="/login" element={<Login />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/payment-history" element={<PaymentHistory />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
 
-          {/* PROTECTED ROUTES */}
           <Route
             path="/dashboard"
             element={
-              <PrivateRoute>
+              <ProtectedRoute>
                 <Dashboard />
-              </PrivateRoute>
+              </ProtectedRoute>
             }
           />
 
           <Route
             path="/properties"
             element={
-              <PrivateRoute>
+              <ProtectedRoute>
                 <PropertyList />
-              </PrivateRoute>
+              </ProtectedRoute>
             }
           />
 
           <Route
             path="/add-property"
             element={
-              <PrivateRoute>
+              <ProtectedRoute>
                 <AddProperty />
-              </PrivateRoute>
+              </ProtectedRoute>
             }
           />
+
           <Route
-  path="/properties/:id/edit"
-  element={
-    <PrivateRoute>
-      <EditProperty />
-    </PrivateRoute>
-  }
-/>
-<Route
-  path="/properties/:id"
-  element={
-    <PrivateRoute>
-      <PropertyDetails />
-    </PrivateRoute>
-  }
-/>
+            path="/properties/:id"
+            element={
+              <ProtectedRoute>
+                <PropertyDetails />
+              </ProtectedRoute>
+            }
+          />
 
+          <Route
+            path="/properties/:id/edit"
+            element={
+              <ProtectedRoute>
+                <EditProperty />
+              </ProtectedRoute>
+            }
+          />
 
-
+          <Route
+            path="/payment-history"
+            element={
+              <ProtectedRoute>
+                <PaymentHistory />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </div>
     </>

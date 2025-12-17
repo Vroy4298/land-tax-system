@@ -1,5 +1,36 @@
-// frontend/src/pages/PaymentHistory.jsx
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { 
+  Download, 
+  FileText, 
+  Calendar, 
+  CreditCard, 
+  User, 
+  MapPin, 
+  Receipt,
+  CheckCircle2
+} from "lucide-react";
+import Loader from "../components/Loader";
+import EmptyState from "../components/EmptyState";
+import { getAuthToken } from "../utils/auth";
+
+// Animation Variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { 
+    opacity: 1, 
+    transition: { staggerChildren: 0.08 } 
+  }
+};
+
+const rowVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { type: "spring", stiffness: 300, damping: 24 } 
+  }
+};
 
 export default function PaymentHistory() {
   const [payments, setPayments] = useState([]);
@@ -12,7 +43,12 @@ export default function PaymentHistory() {
   const fetchPayments = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
+      if (!token) {
+        alert("Session expired. Please login again.");
+        window.location.href = "/login";
+        return;
+      }
 
       const res = await fetch("http://localhost:5000/api/payments", {
         headers: { Authorization: `Bearer ${token}` },
@@ -22,12 +58,14 @@ export default function PaymentHistory() {
 
       if (!res.ok) {
         console.error("Payment history error:", data);
+        setPayments([]);
         return;
       }
 
       setPayments(data);
     } catch (err) {
       console.error("Network error:", err);
+      setPayments([]);
     } finally {
       setLoading(false);
     }
@@ -35,7 +73,7 @@ export default function PaymentHistory() {
 
   const downloadReceipt = async (propertyId) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
 
       const res = await fetch(
         `http://localhost:5000/api/properties/${propertyId}/receipt`,
@@ -67,63 +105,172 @@ export default function PaymentHistory() {
   const formatINR = (num) =>
     "₹" + Number(num || 0).toLocaleString("en-IN");
 
+  /* =======================
+     LOADING STATE
+  ======================= */
   if (loading) {
-    return <p className="page-offset text-gray-500">Loading payments...</p>;
-  }
-
-  if (payments.length === 0) {
     return (
-      <div className="page-offset text-center text-gray-500">
-        <h2 className="text-2xl font-bold mb-4">Payment History</h2>
-        <p>No tax payments found.</p>
+      <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-[#0b1220]">
+        <Loader />
       </div>
     );
   }
 
+  /* =======================
+     EMPTY STATE
+  ======================= */
+  if (!loading && payments.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-[#0b1220] pt-20">
+        <EmptyState
+          title="No payments recorded"
+          description="Your payment history will appear here once you settle your first tax invoice."
+        />
+      </div>
+    );
+  }
+
+  /* =======================
+     DATA STATE
+  ======================= */
   return (
-    <div className="max-w-5xl mx-auto p-6 page-offset">
-      <h2 className="text-3xl font-bold text-gray-800 mb-1">Payment History</h2>
-      <p className="text-sm text-gray-500 mb-6">
-        All your previous land tax payments.
-      </p>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0b1220] font-sans transition-colors duration-300">
+      
+      {/* Container - matching other pages padding */}
+      <div className="max-w-7xl mx-auto px-6 md:px-8 pt-32 pb-16">
+        
+        {/* Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-10"
+        >
+          <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider text-xs mb-3">
+            <Receipt size={14} /> Financial Records
+          </div>
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white tracking-tight mb-3">
+            Payment History
+          </h2>
+          <p className="text-lg text-slate-500 dark:text-slate-400 max-w-2xl">
+            A secure record of all your completed land tax transactions and digital receipts.
+          </p>
+        </motion.div>
 
-      <div className="glass-card overflow-x-auto">
-        <table className="min-w-full divide-y">
-          <thead className="bg-white">
-            <tr>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Owner</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Address</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Amount</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Paid On</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Receipt</th>
-            </tr>
-          </thead>
+        {/* Financial Table Card */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-black/40 border border-slate-100 dark:border-slate-800 overflow-hidden"
+        >
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-800">
+              <thead className="bg-slate-50 dark:bg-slate-950/30">
+                <tr>
+                  <th className="px-6 py-5 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Property Owner
+                  </th>
+                  <th className="px-6 py-5 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Location
+                  </th>
+                  <th className="px-6 py-5 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Amount Paid
+                  </th>
+                  <th className="px-6 py-5 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-8">
+                    Transaction Date
+                  </th>
+                  <th className="px-6 py-5 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Receipt
+                  </th>
+                </tr>
+              </thead>
 
-          <tbody className="bg-white divide-y">
-            {payments.map((p) => (
-              <tr key={p._id} className="hover:bg-gray-50">
-                <td className="px-6 py-4">{p.ownerName}</td>
-                <td className="px-6 py-4">{p.address}</td>
-                <td className="px-6 py-4 text-blue-600 font-semibold">
-                  {formatINR(p.finalTaxAmount)}
-                </td>
-                <td className="px-6 py-4">
-                  {new Date(p.paymentDate).toLocaleString()}
-                </td>
-
-                <td className="px-6 py-4">
-                  <button
-                    onClick={() => downloadReceipt(p._id)}
-                    className="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700"
+              <motion.tbody 
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800"
+              >
+                {payments.map((p) => (
+                  <motion.tr 
+                    key={p._id} 
+                    variants={rowVariants}
+                    className="group hover:bg-blue-50/30 dark:hover:bg-slate-800/40 transition-colors duration-200"
                   >
-                    Download PDF
-                  </button>
-                </td>
+                    {/* Owner */}
+                    <td className="px-6 py-5 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400">
+                          <User size={16} />
+                        </div>
+                        <span className="font-bold text-slate-900 dark:text-white text-sm">
+                          {p.ownerName}
+                        </span>
+                      </div>
+                    </td>
 
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                    {/* Address */}
+                    <td className="px-6 py-5 whitespace-nowrap">
+                      <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 max-w-[200px]">
+                        <MapPin size={14} className="shrink-0 text-slate-400" />
+                        <span className="truncate" title={p.address}>{p.address}</span>
+                      </div>
+                    </td>
+
+                    {/* Amount */}
+                    <td className="px-6 py-5 whitespace-nowrap text-right">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-mono font-bold text-sm">
+                        {formatINR(p.finalTaxAmount)}
+                        <CheckCircle2 size={12} className="text-emerald-500" />
+                      </span>
+                    </td>
+
+                    {/* Date */}
+                    <td className="px-6 py-5 whitespace-nowrap pl-8">
+                      <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                        <Calendar size={14} className="text-slate-400" />
+                        {new Date(p.paymentDate).toLocaleDateString(undefined, {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                        <span className="text-xs text-slate-400 ml-1">
+                          {new Date(p.paymentDate).toLocaleTimeString(undefined, {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* Action */}
+                    <td className="px-6 py-5 whitespace-nowrap text-right">
+                      <button
+                        onClick={() => downloadReceipt(p._id)}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-blue-600 hover:text-white dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-blue-600 dark:hover:text-white transition-all font-medium text-sm group/btn shadow-sm hover:shadow-md"
+                      >
+                        <FileText size={16} className="group-hover/btn:scale-110 transition-transform" />
+                        <span>PDF</span>
+                        <Download size={14} className="opacity-50 group-hover/btn:opacity-100 transition-opacity" />
+                      </button>
+                    </td>
+                  </motion.tr>
+                ))}
+              </motion.tbody>
+            </table>
+          </div>
+          
+          {/* Footer */}
+          <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
+             <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+               <CreditCard size={14} />
+               <span>Secured by LandTax Payment Gateway</span>
+             </div>
+             <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+               Total Records: {payments.length}
+             </span>
+          </div>
+        </motion.div>
       </div>
     </div>
   );

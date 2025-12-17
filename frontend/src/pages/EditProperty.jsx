@@ -1,6 +1,36 @@
-// frontend/src/pages/EditProperty.jsx
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { 
+  User, 
+  Phone, 
+  Mail, 
+  MapPin, 
+  Ruler, 
+  Calendar, 
+  Building2, 
+  Briefcase, 
+  Map, 
+  Calculator, 
+  Save, 
+  Trash2, 
+  ArrowLeft,
+  CheckCircle2,
+  AlertCircle
+} from "lucide-react";
+import { getAuthToken } from "../utils/auth";
+import Loader from "../components/Loader";
+
+// Animation Variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
+};
 
 export default function EditProperty() {
   const { id } = useParams();
@@ -27,7 +57,11 @@ export default function EditProperty() {
     const fetchProperty = async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem("token");
+        const token = getAuthToken();
+        if (!token) {
+          window.location.href = "/login";
+          return;
+        }
         const res = await fetch(`http://localhost:5000/api/properties/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -74,8 +108,8 @@ export default function EditProperty() {
 
   const showToast = (type, message) => {
     setToast({ show: true, type, message });
-    setTimeout(() => setToast({ show: false, type: "", message: "" }), 2500);
-    };
+    setTimeout(() => setToast({ show: false, type: "", message: "" }), 3000);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -152,7 +186,7 @@ export default function EditProperty() {
 
     setSaving(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
 
       const res = await fetch(`http://localhost:5000/api/properties/${id}`, {
         method: "PUT",
@@ -168,8 +202,8 @@ export default function EditProperty() {
 
       const data = await res.json();
       if (res.ok) {
-        showToast("success", "Property updated");
-        setTimeout(() => navigate("/properties"), 800);
+        showToast("success", "Property details updated successfully");
+        setTimeout(() => navigate("/properties"), 1000);
       } else {
         showToast("error", data.error || "Update failed");
       }
@@ -181,10 +215,10 @@ export default function EditProperty() {
   };
 
   const handleDelete = async () => {
-    if (!confirm("Delete this property?")) return;
+    if (!confirm("Are you sure you want to delete this property? This action cannot be undone.")) return;
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
       const res = await fetch(`http://localhost:5000/api/properties/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
@@ -192,8 +226,8 @@ export default function EditProperty() {
 
       const data = await res.json();
       if (res.ok) {
-        showToast("success", "Deleted successfully");
-        setTimeout(() => navigate("/properties"), 800);
+        showToast("success", "Property deleted successfully");
+        setTimeout(() => navigate("/properties"), 1000);
       } else {
         showToast("error", data.error || "Delete failed");
       }
@@ -202,265 +236,346 @@ export default function EditProperty() {
     }
   };
 
-  if (loading)
-    return <p className="text-center mt-10 text-gray-600">Loading property...</p>;
-
-  if (!property)
+  if (loading) {
     return (
-      <p className="text-center mt-10 text-red-600">
-        Property not found or not authorized.
-      </p>
+      <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-[#0b1220]">
+        <Loader />
+      </div>
     );
+  }
 
-  // ✅ FIX — extract breakdown safely
+  if (!property) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-[#0b1220]">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Property Not Found</h2>
+          <button onClick={() => navigate("/properties")} className="text-blue-600 hover:underline">
+            Back to Properties
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const breakdown = taxPreview.breakdown || {};
 
   return (
-    <div className="max-w-6xl mx-auto p-6 page-offset">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Edit Property</h1>
-        <div>
-          <button onClick={() => navigate("/properties")} className="btn-secondary">
-            Back
-          </button>
-          <button onClick={handleDelete} className="ml-2 bg-red-500 text-white px-3 py-1 rounded">
-            Delete
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* LEFT: FORM */}
-        <form onSubmit={handleSave} className="bg-white p-6 rounded shadow space-y-4">
-          
-          <div>
-            <label className="text-sm font-medium">Owner Name</label>
-            <input
-              name="ownerName"
-              value={form.ownerName}
-              onChange={handleChange}
-              className="w-full p-3 border rounded mt-1"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium">Phone</label>
-              <input
-                name="ownerPhone"
-                value={form.ownerPhone}
-                onChange={handleChange}
-                className="w-full p-3 border rounded mt-1"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">Email</label>
-              <input
-                name="ownerEmail"
-                value={form.ownerEmail}
-                onChange={handleChange}
-                className="w-full p-3 border rounded mt-1"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">Address</label>
-            <input
-              name="address"
-              value={form.address}
-              onChange={handleChange}
-              className="w-full p-3 border rounded mt-1"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium">Built-up Area (sq ft)</label>
-              <input
-                name="builtUpArea"
-                type="number"
-                value={form.builtUpArea}
-                onChange={handleChange}
-                className="w-full p-3 border rounded mt-1"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">Construction Year</label>
-              <input
-                name="constructionYear"
-                type="number"
-                value={form.constructionYear}
-                onChange={handleChange}
-                className="w-full p-3 border rounded mt-1"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="text-sm font-medium">Property Type</label>
-              <select
-                name="propertyType"
-                value={form.propertyType}
-                onChange={handleChange}
-                className="w-full p-3 border rounded mt-1"
-              >
-                <option>Residential</option>
-                <option>Commercial</option>
-                <option>Industrial</option>
-                <option>Agriculture</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">Usage</label>
-              <select
-                name="usageType"
-                value={form.usageType}
-                onChange={handleChange}
-                className="w-full p-3 border rounded mt-1"
-              >
-                <option value="self">Self-Occupied</option>
-                <option value="rented">Rented</option>
-                <option value="mixed">Mixed</option>
-                <option value="commercial">Commercial</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">Zone</label>
-              <select
-                name="zone"
-                value={form.zone}
-                onChange={handleChange}
-                className="w-full p-3 border rounded mt-1"
-              >
-                <option value="A">A - High</option>
-                <option value="B">B - Medium</option>
-                <option value="C">C - Low</option>
-                <option value="D">D - Very Low</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              type="submit"
-              disabled={saving}
-              className={`btn-primary ${saving ? "opacity-60" : ""}`}
-            >
-              {saving ? "Saving..." : "Save Changes"}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => navigate("/properties")}
-              className="btn-secondary"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-
-        {/* RIGHT: TAX PREVIEW */}
-        <div className="bg-white p-6 rounded shadow glass-card">
-          <h3 className="text-xl font-semibold mb-4">Live Tax Preview</h3>
-
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-gray-500">Built-up Area</span>
-              <span className="font-medium">{breakdown.area ?? 0} sq ft</span>
-            </div>
-
-            <div className="flex justify-between">
-              <span className="text-gray-500">Base Rate</span>
-              <span className="font-medium">₹{breakdown.baseRate ?? 0} / sq ft</span>
-            </div>
-
-            <div className="flex justify-between">
-              <span className="text-gray-500">Zone Multiplier</span>
-              <span className="font-medium">× {breakdown.zMult ?? 1}</span>
-            </div>
-
-            <div className="flex justify-between">
-              <span className="text-gray-500">Usage Multiplier</span>
-              <span className="font-medium">× {breakdown.uMult ?? 1}</span>
-            </div>
-
-            <div className="flex justify-between">
-              <span className="text-gray-500">Age Factor ({breakdown.age ?? 0} yrs)</span>
-              <span className="font-medium">× {breakdown.ageFactor ?? 1}</span>
-            </div>
-
-            <hr className="my-3" />
-
-            <div className="flex justify-between items-center">
-              <span className="text-lg font-semibold">Estimated Tax</span>
-              <span className="text-2xl font-bold text-blue-600">
-                ₹{taxPreview.finalTaxAmount}
-              </span>
-            </div>
-          </div>
-
-          {/* DETAILED BREAKDOWN */}
-          <div className="mt-6 bg-white shadow-sm border rounded-xl p-5">
-            <h3 className="font-semibold text-lg mb-3">Detailed Breakdown</h3>
-
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Built-up Area</span>
-                <span className="font-medium">{breakdown.area} sq ft</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-gray-600">Base Rate</span>
-                <span className="font-medium">₹{breakdown.baseRate}/sq ft</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-gray-600">Zone Multiplier</span>
-                <span className="font-medium">× {breakdown.zMult}</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-gray-600">Usage Multiplier</span>
-                <span className="font-medium">× {breakdown.uMult}</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-gray-600">Property Age</span>
-                <span className="font-medium">{breakdown.age} yrs</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-gray-600">Age Factor</span>
-                <span className="font-medium">× {breakdown.ageFactor}</span>
-              </div>
-
-              <hr className="my-3" />
-
-              <div className="flex justify-between text-blue-600 font-semibold text-lg">
-                <span>Raw Tax</span>
-                <span>₹{breakdown.rawTax}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Toast */}
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0b1220] font-sans transition-colors duration-300 relative">
+      
+      {/* Toast Notification */}
       {toast.show && (
-        <div
-          className={`fixed top-6 right-6 px-4 py-2 rounded shadow text-white ${
-            toast.type === "success" ? "bg-green-500" : "bg-red-500"
-          }`}
-        >
-          {toast.message}
+        <div className={`fixed top-24 right-6 z-50 px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-right-10 duration-300 border ${
+          toast.type === "success" 
+            ? "bg-white dark:bg-slate-900 border-green-500 text-green-700 dark:text-green-400" 
+            : "bg-white dark:bg-slate-900 border-red-500 text-red-600 dark:text-red-400"
+        }`}>
+          {toast.type === "success" ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
+          <span className="font-semibold">{toast.message}</span>
         </div>
       )}
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-6 md:px-8 pt-32 pb-16">
+        
+        {/* Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10"
+        >
+          <div>
+            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mb-2">
+               <Link to="/properties" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-1">
+                 <ArrowLeft size={14} /> Back to List
+               </Link>
+               <span>/</span>
+               <span className="text-slate-800 dark:text-slate-200 font-medium">Edit Property</span>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white tracking-tight">
+              Edit Property Record
+            </h1>
+          </div>
+          
+          <button 
+            onClick={handleDelete}
+            className="flex items-center gap-2 px-5 py-2.5 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 rounded-xl font-bold border border-red-100 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/20 transition-all"
+          >
+            <Trash2 size={18} />
+            <span>Delete Property</span>
+          </button>
+        </motion.div>
+
+        <motion.div 
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
+        >
+
+          {/* LEFT COLUMN: EDIT FORM */}
+          <div className="lg:col-span-8">
+            <form onSubmit={handleSave} className="space-y-6">
+              
+              {/* SECTION 1: OWNER */}
+              <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-xl shadow-slate-200/40 dark:shadow-black/20 border border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
+                  <div className="p-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-blue-600 dark:text-blue-400">
+                    <User size={20} strokeWidth={2.5} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">Owner Details</h3>
+                    <p className="text-xs text-slate-500 font-medium">Update contact information</p>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Owner Name</label>
+                    <div className="relative group">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
+                      <input
+                        name="ownerName"
+                        value={form.ownerName}
+                        onChange={handleChange}
+                        className="w-full pl-11 pr-5 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Phone</label>
+                      <div className="relative group">
+                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
+                        <input
+                          name="ownerPhone"
+                          value={form.ownerPhone}
+                          onChange={handleChange}
+                          className="w-full pl-11 pr-5 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Email</label>
+                      <div className="relative group">
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
+                        <input
+                          name="ownerEmail"
+                          value={form.ownerEmail}
+                          onChange={handleChange}
+                          className="w-full pl-11 pr-5 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* SECTION 2: SPECS */}
+              <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-xl shadow-slate-200/40 dark:shadow-black/20 border border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
+                  <div className="p-2.5 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl text-indigo-600 dark:text-indigo-400">
+                    <MapPin size={20} strokeWidth={2.5} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">Property Specs</h3>
+                    <p className="text-xs text-slate-500 font-medium">Update location & dimensions</p>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Address</label>
+                    <div className="relative group">
+                      <MapPin className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
+                      <textarea
+                        name="address"
+                        rows="2"
+                        value={form.address}
+                        onChange={handleChange}
+                        className="w-full pl-11 pr-5 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all shadow-sm resize-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Built-up Area (sq ft)</label>
+                      <div className="relative group">
+                        <Ruler className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
+                        <input
+                          name="builtUpArea"
+                          type="number"
+                          value={form.builtUpArea}
+                          onChange={handleChange}
+                          className="w-full pl-11 pr-5 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Construction Year</label>
+                      <div className="relative group">
+                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
+                        <input
+                          name="constructionYear"
+                          type="number"
+                          value={form.constructionYear}
+                          onChange={handleChange}
+                          className="w-full pl-11 pr-5 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* SECTION 3: CLASSIFICATION */}
+              <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-xl shadow-slate-200/40 dark:shadow-black/20 border border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
+                  <div className="p-2.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl text-emerald-600 dark:text-emerald-400">
+                    <Building2 size={20} strokeWidth={2.5} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">Classification</h3>
+                    <p className="text-xs text-slate-500 font-medium">Update zoning & usage</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Type</label>
+                    <div className="relative group">
+                      <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
+                      <select
+                        name="propertyType"
+                        value={form.propertyType}
+                        onChange={handleChange}
+                        className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all shadow-sm appearance-none cursor-pointer"
+                      >
+                        <option>Residential</option>
+                        <option>Commercial</option>
+                        <option>Industrial</option>
+                        <option>Agriculture</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Usage</label>
+                    <div className="relative group">
+                      <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
+                      <select
+                        name="usageType"
+                        value={form.usageType}
+                        onChange={handleChange}
+                        className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all shadow-sm appearance-none cursor-pointer"
+                      >
+                        <option value="self">Self-Occupied</option>
+                        <option value="rented">Rented</option>
+                        <option value="mixed">Mixed</option>
+                        <option value="commercial">Commercial</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Zone</label>
+                    <div className="relative group">
+                      <Map className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
+                      <select
+                        name="zone"
+                        value={form.zone}
+                        onChange={handleChange}
+                        className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all shadow-sm appearance-none cursor-pointer"
+                      >
+                        <option value="A">A - High</option>
+                        <option value="B">B - Medium</option>
+                        <option value="C">C - Low</option>
+                        <option value="D">D - Very Low</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* ACTIONS */}
+              <div className="grid grid-cols-2 gap-4 pt-4">
+                 <button 
+                  type="button" 
+                  onClick={() => navigate("/properties")}
+                  className="w-full py-4 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={saving}
+                  className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-lg shadow-xl shadow-blue-600/20 transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {saving ? (
+                    <span className="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin"></span>
+                  ) : (
+                    <Save size={22} />
+                  )}
+                  {saving ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+
+            </form>
+          </div>
+
+          {/* RIGHT COLUMN: TAX PREVIEW (STICKY) */}
+          <div className="lg:col-span-4 lg:sticky lg:top-36 h-fit">
+             <motion.div 
+              variants={itemVariants}
+              className="bg-slate-900 text-white rounded-3xl p-8 shadow-2xl shadow-slate-900/20 border border-slate-800 relative overflow-hidden"
+            >
+              {/* Background Decoration */}
+              <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+              
+              <h3 className="text-xl font-bold mb-6 flex items-center gap-2 relative z-10">
+                <Calculator className="text-blue-400" /> 
+                Live Estimation
+              </h3>
+
+              <div className="space-y-4 relative z-10">
+                 <div className="flex justify-between items-center text-sm py-2 border-b border-slate-800">
+                   <span className="text-slate-400">Built-up Area</span>
+                   <span className="font-mono text-slate-200">{breakdown.area || 0} <span className="text-xs text-slate-500">sq ft</span></span>
+                 </div>
+                 <div className="flex justify-between items-center text-sm py-2 border-b border-slate-800">
+                   <span className="text-slate-400">Base Rate</span>
+                   <span className="font-mono text-slate-200">₹{breakdown.baseRate || 0}</span>
+                 </div>
+                 <div className="flex justify-between items-center text-sm py-2 border-b border-slate-800">
+                   <span className="text-slate-400">Zone Multiplier</span>
+                   <span className="font-mono text-emerald-400">× {breakdown.zMult || 1}</span>
+                 </div>
+                 <div className="flex justify-between items-center text-sm py-2 border-b border-slate-800">
+                   <span className="text-slate-400">Usage Multiplier</span>
+                   <span className="font-mono text-emerald-400">× {breakdown.uMult || 1}</span>
+                 </div>
+                 <div className="flex justify-between items-center text-sm py-2 border-b border-slate-800">
+                   <span className="text-slate-400">Age Factor ({breakdown.age}y)</span>
+                   <span className="font-mono text-emerald-400">× {breakdown.ageFactor || 1}</span>
+                 </div>
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-slate-700 relative z-10">
+                <p className="text-sm text-slate-400 uppercase tracking-wider font-semibold mb-1">New Annual Tax</p>
+                <div className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200 font-mono">
+                  ₹{taxPreview.finalTaxAmount.toLocaleString()}
+                </div>
+                <div className="mt-4 flex items-start gap-2 text-xs text-slate-500 bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">
+                  <CheckCircle2 size={14} className="mt-0.5 text-blue-500" />
+                  Updating this value will generate a new tax demand notice.
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+        </motion.div>
+      </div>
     </div>
   );
 }

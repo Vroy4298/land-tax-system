@@ -1,29 +1,44 @@
-import { verifyToken } from "../utils/jwt.mjs";
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export const authMiddleware = (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization || req.headers.Authorization;
+    // ✅ Read Authorization header safely (case-insensitive)
+    const authHeader =
+      req.headers.authorization || req.headers.Authorization;
 
-    if (!authHeader) {
+    // ❌ No header
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({ error: "No token provided" });
     }
 
+    // ✅ Extract token
     const token = authHeader.split(" ")[1];
-    const decoded = verifyToken(token);
 
-    if (!decoded) {
-      return res.status(403).json({ error: "Invalid token" });
+    // ❌ Guard against malformed values
+    if (!token || token === "undefined" || token === "null") {
+      return res.status(401).json({ error: "Invalid token" });
     }
 
-    // Standard user object
+    // ✅ Verify JWT
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // ❌ Extra safety
+    if (!decoded || !decoded.id) {
+      return res.status(401).json({ error: "Invalid token payload" });
+    }
+
+    // ✅ Attach standardized user object
     req.user = {
-      id: decoded.id || decoded._id || decoded.userId,
+      id: decoded.id,
       email: decoded.email,
     };
 
     next();
   } catch (err) {
-    console.error("Auth error:", err);
-    res.status(401).json({ error: "Authentication failed" });
+    console.error("Token verification failed:", err.message);
+    return res.status(401).json({ error: "Invalid or expired token" });
   }
 };
