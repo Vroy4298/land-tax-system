@@ -372,25 +372,57 @@ export default function Dashboard() {
                   </Link>
                 </div>
 
-                <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+                {/* SYSTEM INSIGHTS: Interactive circles stack */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  whileHover={{ y: -5 }}
+                  className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col justify-between group cursor-default transition-all duration-300"
+                >
                   <div>
-                    <h4 className="text-lg font-bold text-slate-800 dark:text-white mb-2">System Insights</h4>
+                    <h4 className="text-lg font-bold text-slate-800 dark:text-white mb-2 group-hover:text-blue-600 transition-colors">System Insights</h4>
                     <p className="text-sm text-slate-500 dark:text-slate-400">Total portfolio valuation and tax projections for the current cycle.</p>
                   </div>
                   <div className="mt-6 flex items-center gap-4">
-                    <div className="flex -space-x-3 overflow-hidden">
-                      {[1, 2, 3, 4].map(i => (
-                        <div key={i} className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-slate-900 bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500">
+                    <motion.div 
+                      className="flex -space-x-3"
+                      whileHover="hover"
+                      initial="initial"
+                    >
+                      {[1, 2, 3, 4].map((i, idx) => (
+                        <motion.div 
+                          key={i}
+                          variants={{
+                            initial: { x: 0 },
+                            hover: { x: idx * 8, zIndex: 10 }
+                          }}
+                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                          className="inline-block h-9 w-9 rounded-full ring-2 ring-white dark:ring-slate-900 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 flex items-center justify-center text-[11px] font-bold text-slate-500 shadow-sm transition-shadow hover:shadow-md"
+                        >
                           {String.fromCharCode(64 + i)}
-                        </div>
+                        </motion.div>
                       ))}
-                      <div className="flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-white dark:ring-slate-900 bg-blue-600 text-[10px] font-bold text-white">
+                      <motion.div 
+                        variants={{
+                          initial: { x: 0 },
+                          hover: { x: 4 * 8, zIndex: 10 }
+                        }}
+                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        className="flex items-center justify-center h-9 w-9 rounded-full ring-2 ring-white dark:ring-slate-900 bg-blue-600 text-[11px] font-bold text-white shadow-lg shadow-blue-500/30"
+                      >
                         +8
-                      </div>
+                      </motion.div>
+                    </motion.div>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white">Active Contributors</span>
+                      <span className="text-[10px] text-emerald-500 font-bold flex items-center gap-1 mt-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        LIVE NOW
+                      </span>
                     </div>
-                    <span className="text-xs font-medium text-slate-400">Active Contributors</span>
                   </div>
-                </div>
+                </motion.div>
               </motion.div>
             </div>
 

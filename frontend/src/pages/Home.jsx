@@ -1,5 +1,8 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { getAuthToken } from "../utils/auth";
+import { Navigate } from "react-router-dom";
+
 import {
   Building2,
   Calculator,
@@ -41,8 +44,15 @@ const navbarVariant = {
     transition: { duration: 0.8, ease: "circOut" }
   }
 };
+const token = getAuthToken();
 
 export default function Home() {
+   const token = getAuthToken();
+
+  // 🔐 If user already logged in → go to dashboard
+  if (token) {
+    return <Navigate to="/dashboard" replace />;
+  }
   return (
     <div className="min-h-screen bg-[#020617] text-white font-sans overflow-x-hidden selection:bg-blue-500/30">
       
