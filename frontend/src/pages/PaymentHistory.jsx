@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { 
@@ -45,24 +46,24 @@ export default function PaymentHistory() {
       setLoading(true);
       const token = getAuthToken();
       if (!token) {
-        alert("Session expired. Please login again.");
         window.location.href = "/login";
         return;
       }
 
-      const res = await fetch("http://localhost:5000/api/payments", {
+      const res = await fetch("http://localhost:5000/api/properties", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        console.error("Payment history error:", data);
         setPayments([]);
         return;
       }
 
-      setPayments(data);
+      // Filter only properties that are marked as paid
+      const paid = data.filter((p) => p.paymentStatus === "paid");
+      setPayments(paid);
     } catch (err) {
       console.error("Network error:", err);
       setPayments([]);
@@ -74,7 +75,6 @@ export default function PaymentHistory() {
   const downloadReceipt = async (propertyId) => {
     try {
       const token = getAuthToken();
-
       const res = await fetch(
         `http://localhost:5000/api/properties/${propertyId}/receipt`,
         {
@@ -119,12 +119,12 @@ export default function PaymentHistory() {
   /* =======================
      EMPTY STATE
   ======================= */
-  if (!loading && payments.length === 0) {
+  if (payments.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-[#0b1220] pt-20">
         <EmptyState
-          title="No payments recorded"
-          description="Your payment history will appear here once you settle your first tax invoice."
+          title="No payments yet"
+          description="Your paid receipts will appear here once you complete a tax transaction."
         />
       </div>
     );
@@ -136,7 +136,6 @@ export default function PaymentHistory() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0b1220] font-sans transition-colors duration-300">
       
-      {/* Container - matching other pages padding */}
       <div className="max-w-7xl mx-auto px-6 md:px-8 pt-32 pb-16">
         
         {/* Header */}
@@ -200,7 +199,7 @@ export default function PaymentHistory() {
                     {/* Owner */}
                     <td className="px-6 py-5 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400">
+                        <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
                           <User size={16} />
                         </div>
                         <span className="font-bold text-slate-900 dark:text-white text-sm">
@@ -234,12 +233,6 @@ export default function PaymentHistory() {
                           month: 'short',
                           day: 'numeric'
                         })}
-                        <span className="text-xs text-slate-400 ml-1">
-                          {new Date(p.paymentDate).toLocaleTimeString(undefined, {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </span>
                       </div>
                     </td>
 
@@ -264,7 +257,7 @@ export default function PaymentHistory() {
           <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                <CreditCard size={14} />
-               <span>Secured by LandTax Payment Gateway</span>
+               <span>Secured by Digital Land Registry</span>
              </div>
              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
                Total Records: {payments.length}
