@@ -5,6 +5,25 @@ import { generateToken } from "../utils/jwt.mjs";
 import { sendResetEmail } from "../utils/mailer.mjs";
 import { ObjectId } from "mongodb";
 
+
+
+const verifyTurnstile = async (token) => {
+  const res = await fetch(
+    "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        secret: process.env.CLOUDFLARE_TURNSTILE_SECRET,
+        response: token,
+      }),
+    }
+  );
+
+  return await res.json();
+};
+
+
 /* ---------------------- REGISTER USER ---------------------- */
 export const registerUser = async (req, res) => {
   try {
@@ -41,19 +60,45 @@ export const registerUser = async (req, res) => {
 /* ---------------------- LOGIN USER ---------------------- */
 export const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, turnstileToken } = req.body;
 
+    // 🔴 1. Turnstile token required
+    if (!turnstileToken) {
+      return res.status(400).json({ error: "Bot verification required" });
+    }
+
+    // 🔐 2. Verify Turnstile with Cloudflare
+    const verifyRes = await fetch(
+      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          secret: process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY, // ✅ SECRET KEY ONLY
+          response: turnstileToken,
+        }),
+      }
+    );
+
+    const verifyData = await verifyRes.json();
+
+    if (!verifyData.success) {
+      console.error("Turnstile failed:", verifyData);
+      return res.status(403).json({ error: "Bot verification required" });
+    }
+
+    // 🔐 3. Normal login logic
     const db = await connectDB();
     const users = db.collection("users");
 
     const user = await users.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({ error: "Invalid credentials" });
     }
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({ error: "Invalid credentials" });
     }
 
     const token = generateToken(user);
@@ -63,6 +108,7 @@ export const loginUser = async (req, res) => {
       token,
       user: { id: user._id, name: user.name, email: user.email },
     });
+
   } catch (err) {
     console.error("Login error:", err);
     return res.status(500).json({ error: "Login failed" });
