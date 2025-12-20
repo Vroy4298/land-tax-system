@@ -75,15 +75,25 @@ function Login() {
 
   setLoading(true);
 
-  try {
-    const response = await fetch("http://localhost:5000/api/users/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...form,
-        turnstileToken: cfToken, // ✅ correct
-      }),
-    });
+  // try {
+  //   const response = await fetch("http://localhost:5000/api/users/login", {
+  //     method: "POST",
+  //     headers: { "Content-Type": "application/json" },
+  //     body: JSON.stringify({
+  //       ...form,
+  //       turnstileToken: cfToken, // ✅ correct
+  //     }),
+  //   });
+    try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/login`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    ...form,
+    turnstileToken: cfToken,
+  }),
+});
+
 
     const data = await response.json();
 
@@ -200,6 +210,15 @@ function Login() {
                   {showPassword ? <EyeOff /> : <Eye />}
                 </button>
               </div>
+              <div className="text-right">
+  <Link
+    to="/forgot-password"
+    className="text-sm font-medium text-blue-600 hover:text-blue-500 hover:underline"
+  >
+    Forgot password?
+  </Link>
+</div>
+
 
               {/* TURNSTILE */}
               <Turnstile
