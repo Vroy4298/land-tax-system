@@ -49,12 +49,22 @@ function Register() {
     setLoading(true);
     setMsg({ text: "Registering...", type: "" });
 
+    // try {
+    //   const res = await fetch("http://localhost:5000/api/users/register", {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify(form),
+    //   });
     try {
-      const res = await fetch("http://localhost:5000/api/users/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/login`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    ...form,
+    turnstileToken: cfToken,
+  }),
+});
+
 
       const data = await res.json();
 
