@@ -56,40 +56,39 @@ function Register() {
     //     body: JSON.stringify(form),
     //   });
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/login`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    ...form,
-    turnstileToken: cfToken,
-  }),
-});
+  const res = await fetch(
+    `${import.meta.env.VITE_API_URL}/api/users/register`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    }
+  );
 
+  const data = await res.json();
 
-      const data = await res.json();
+  if (!res.ok) {
+    if (data.error?.toLowerCase().includes("email")) {
+      setErrors((prev) => ({ ...prev, email: data.error }));
+    }
 
-      // SERVER ERRORS → map to field
-      if (!res.ok) {
-        if (data.error?.toLowerCase().includes("email")) {
-          setErrors((prev) => ({ ...prev, email: data.error }));
-        }
+    setMsg({ text: data.error || "Registration failed", type: "error" });
+    return;
+  }
 
-        setMsg({ text: data.error || "Registration failed", type: "error" });
-        return;
-      }
+  setMsg({
+    text: "🎉 Registration successful! Redirecting to login...",
+    type: "success",
+  });
 
-      // SUCCESS
-      setMsg({
-        text: "🎉 Registration successful! Redirecting to login...",
-        type: "success",
-      });
+  setForm({ name: "", email: "", password: "" });
 
-      setForm({ name: "", email: "", password: "" });
-
-      setTimeout(() => (window.location.href = "/login"), 1200);
-    } catch {
-      setMsg({ text: "Network error — please try again", type: "error" });
-    } finally {
+  setTimeout(() => (window.location.href = "/login"), 1200);
+} catch (err) {
+  console.error(err);
+  setMsg({ text: "Network error — please try again", type: "error" });
+}
+ finally {
       setLoading(false);
     }
   };
