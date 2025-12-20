@@ -13,41 +13,68 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// CORS
+/* =======================
+   ✅ CORS CONFIG (FIXED)
+======================= */
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://land-tax-system.vercel.app",
+  "https://land-tax-system-ten.vercel.app",
+  // add any other Vercel preview domain if needed
+];
+
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: function (origin, callback) {
+      // allow requests with no origin (Postman, curl)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
+/* =======================
+   MIDDLEWARES
+======================= */
 app.use(express.json());
 app.use(morgan(process.env.LOG_LEVEL || "dev"));
 
-// Test Routes
+/* =======================
+   TEST ROUTE
+======================= */
 app.get("/", (req, res) => {
   res.json({ message: "Land Tax Backend (Express version)" });
 });
 
-// Main Routes
+/* =======================
+   ROUTES
+======================= */
 app.use("/api/users", userRoutes);
 app.use("/api/properties", propertyRoutes);
-
-// ⭐ MUST MATCH FRONTEND EXACTLY
 app.use("/api/pay-tax", paymentRoutes);
-
 app.use("/api/payments", paymentHistoryRoutes);
 
-// Global Error Handler
+/* =======================
+   GLOBAL ERROR HANDLER
+======================= */
 app.use((err, req, res, next) => {
-  console.error("💥 Server Error:", err.stack);
+  console.error("💥 Server Error:", err.message);
   res.status(err.status || 500).json({
     error: err.message || "Internal Server Error",
   });
 });
 
-// Start Server
+/* =======================
+   START SERVER
+======================= */
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
