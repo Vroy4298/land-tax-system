@@ -29,89 +29,86 @@ export const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: "All fields required" });
+    }
+
     const db = await connectDB();
     const users = db.collection("users");
 
     const existing = await users.findOne({ email });
     if (existing) {
-      return res.status(400).json({ message: "User already exists" });
+      return res.status(400).json({ error: "Email already exists" });
     }
 
     const hashed = await bcrypt.hash(password, 10);
 
-    const result = await users.insertOne({
+    await users.insertOne({
       name,
       email,
       password: hashed,
-      role: "user",
       createdAt: new Date(),
     });
 
-    return res.status(201).json({ 
-      message: "Registered",
-      userId: result.insertedId 
-    });
+    res.status(201).json({ message: "Registered" });
   } catch (err) {
     console.error("Register error:", err);
-    return res.status(500).json({ error: "Registration failed" });
+    res.status(500).json({ error: "Server error" });
   }
 };
+
+
 
 /* ---------------------- LOGIN USER ---------------------- */
 export const loginUser = async (req, res) => {
   try {
     const { email, password, turnstileToken } = req.body;
 
-    // 🔴 1. Turnstile token required
-    if (!turnstileToken) {
-      return res.status(400).json({ error: "Bot verification required" });
+    if (!email || !password || !turnstileToken) {
+      return res.status(400).json({ error: "Missing credentials" });
     }
 
-    // 🔐 2. Verify Turnstile with Cloudflare
+    // 🔐 Verify Turnstile
     const verifyRes = await fetch(
       "https://challenges.cloudflare.com/turnstile/v0/siteverify",
       {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({
-          secret: process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY, // ✅ SECRET KEY ONLY
+          secret: process.env.TURNSTILE_SECRET_KEY,
           response: turnstileToken,
         }),
       }
     );
 
     const verifyData = await verifyRes.json();
-
     if (!verifyData.success) {
-      console.error("Turnstile failed:", verifyData);
-      return res.status(403).json({ error: "Bot verification required" });
+      return res.status(403).json({ error: "Bot verification failed" });
     }
 
-    // 🔐 3. Normal login logic
     const db = await connectDB();
     const users = db.collection("users");
 
     const user = await users.findOne({ email });
     if (!user) {
-      return res.status(400).json({ error: "Invalid credentials" });
+      return res.status(401).json({ error: "Invalid credentials" });
     }
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
-      return res.status(400).json({ error: "Invalid credentials" });
+      return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const token = generateToken(user);
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "2h" }
+    );
 
-    return res.status(200).json({
-      message: "Login successful",
-      token,
-      user: { id: user._id, name: user.name, email: user.email },
-    });
-
+    res.json({ token });
   } catch (err) {
     console.error("Login error:", err);
-    return res.status(500).json({ error: "Login failed" });
+    res.status(500).json({ error: "Server error" });
   }
 };
 
