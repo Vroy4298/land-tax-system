@@ -20,6 +20,8 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://land-tax-system.vercel.app",
   "https://land-tax-system-ten.vercel.app",
+  "https://land-tax-system-g2c5.vercel.app/",
+  "https://land-tax-system-1.onrender.com",
   // add any other Vercel preview domain if needed
 ];
 
