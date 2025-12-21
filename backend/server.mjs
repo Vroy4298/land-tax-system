@@ -18,18 +18,12 @@ const PORT = process.env.PORT || 5000;
 ======================= */
 const allowedOrigins = [
   "http://localhost:5173",
-
-  // ✅ ACTIVE FRONTEND
-  "https://land-tax-system-g2c5.vercel.app",
-
-  // older / optional
   "https://land-tax-system.vercel.app",
   "https://land-tax-system-ten.vercel.app",
-
-  // backend self (not required, but harmless)
+  "https://land-tax-system-g2c5.vercel.app",
   "https://land-tax-system-1.onrender.com",
+  // add any other Vercel preview domain if needed
 ];
-
 
 app.use(
   cors({
@@ -44,12 +38,10 @@ app.use(
       }
     },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-app.options("*", cors());
-
 
 /* =======================
    MIDDLEWARES
