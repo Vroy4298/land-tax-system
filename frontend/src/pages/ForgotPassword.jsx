@@ -22,14 +22,22 @@ export default function ForgotPassword() {
     setLoading(true);
 
     try {
-      const res = await fetch(
-        "http://localhost:5000/api/users/forgot-password",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        }
-      );
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/forgot-password`, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ email }),
+});
+
+      //  await fetch(
+      //   "http://localhost:5000/api/users/forgot-password",
+      //   {
+      //     method: "POST",
+      //     headers: { "Content-Type": "application/json" },
+      //     body: JSON.stringify({ email }),
+      //   }
+      // );
 
       // We maintain the original security practice: don't reveal if email exists
       toast.success(
