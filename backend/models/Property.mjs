@@ -28,7 +28,17 @@ export const buildPropertyDocument = (data, userId) => {
 
   /* ---------------- NORMALIZATION ---------------- */
   const cleanType = String(propertyType).toLowerCase();   
-  const cleanUsage = String(usageType).toLowerCase();    
+  const cleanUsageMap = {
+  "self-occupied": "self",
+  "self occupied": "self",
+  "rented": "rented",
+  "commercial": "commercial",
+  "mixed": "mixed",
+};
+
+const cleanUsage =
+  cleanUsageMap[String(usageType).toLowerCase()] || "self";
+   
   const cleanZone = String(zone).toUpperCase();           
 
   /* ---------------- BASE RATES ---------------- */
