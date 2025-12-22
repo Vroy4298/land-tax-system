@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { apiFetch } from "../utils/api";
+
 import { motion } from "framer-motion";
 import { 
   User, 
@@ -82,14 +84,13 @@ export default function AddProperty() {
       return;
     }
 
-    const res = await fetch("http://localhost:5000/api/properties", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(form),
-    });
+    const res = await apiFetch("/api/properties", {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+  body: JSON.stringify(payload),
+});
 
     const data = await res.json();
     if (res.ok) alert("Property Added!");
