@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import {
   PieChart, Pie, Cell,
@@ -27,6 +26,8 @@ import Loader from "../components/Loader";
 import EmptyState from "../components/EmptyState";
 import { getAuthToken } from "../utils/auth";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [properties, setProperties] = useState([]);
@@ -40,6 +41,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
+
       try {
         const token = getAuthToken();
         if (!token) {
@@ -47,17 +50,22 @@ export default function Dashboard() {
           return;
         }
 
-        const userRes = await fetch("http://localhost:5000/api/users/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const userData = await userRes.json();
-        setUser(userData);
+        const headers = { Authorization: `Bearer ${token}` };
 
-        const propRes = await fetch("http://localhost:5000/api/properties", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        // ✅ PARALLEL FETCH (FAST)
+        const [userRes, propRes, payRes] = await Promise.all([
+          fetch(`${API_URL}/api/users/profile`, { headers }),
+          fetch(`${API_URL}/api/properties`, { headers }),
+          fetch(`${API_URL}/api/payments`, { headers }),
+        ]);
+
+        const userData = await userRes.json();
         const propertyData = await propRes.json();
+        const paymentData = await payRes.json();
+
+        setUser(userData);
         setProperties(propertyData);
+        setPayments(paymentData);
 
         const totalTax = propertyData.reduce(
           (sum, p) => sum + (p.finalTaxAmount || 0),
@@ -69,14 +77,8 @@ export default function Dashboard() {
           totalTax,
         });
 
-        const payRes = await fetch("http://localhost:5000/api/payments", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const payData = await payRes.json();
-        setPayments(payData);
-
       } catch (err) {
-        console.error(err);
+        console.error("Dashboard load error:", err);
       } finally {
         setLoading(false);
       }
@@ -85,18 +87,17 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
-  // Prepare data for the Pie Chart based on property types
+  // Chart data (unchanged)
   const getChartData = () => {
     const counts = properties.reduce((acc, curr) => {
-      const type = curr.propertyType || 'Residential';
+      const type = curr.propertyType || "Residential";
       acc[type] = (acc[type] || 0) + 1;
       return acc;
     }, {});
-    
     return Object.keys(counts).map(key => ({ name: key, value: counts[key] }));
   };
 
-  const COLORS = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b'];
+  const COLORS = ["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b"];
 
   if (loading) return <Loader />;
 
