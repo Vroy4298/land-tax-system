@@ -28,16 +28,9 @@ export const buildPropertyDocument = (data, userId) => {
 
   /* ---------------- NORMALIZATION ---------------- */
   const cleanType = String(propertyType).toLowerCase();   
-  const cleanUsageMap = {
-  "self-occupied": "self",
-  "self occupied": "self",
-  "rented": "rented",
-  "commercial": "commercial",
-  "mixed": "mixed",
-};
-
-const cleanUsage =
-  cleanUsageMap[String(usageType).toLowerCase()] || "self";
+  const cleanUsage = String(usageType)
+  .toLowerCase()
+  .replace(/\s+/g, "-");
    
   const cleanZone = String(zone).toUpperCase();           
 
@@ -53,11 +46,10 @@ const cleanUsage =
   const zoneMultiplier = { A: 1.3, B: 1.1, C: 1.0 };
 
   const usageMultiplier = {
-    self: 1.0,
-    rented: 1.2,
-    mixed: 1.1,
-    commercial: 1.3,  
-  };
+  "self-occupied": 1.0,
+  "rented": 1.2,
+};
+
 
   /* ---------------- AGE FACTOR ---------------- */
   const currentYear = new Date().getFullYear();
