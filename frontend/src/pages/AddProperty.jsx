@@ -98,46 +98,63 @@ export default function AddProperty() {
   };
 
   /* ================= SUBMIT ================= */
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    const token = getAuthToken();
-    if (!token) {
-      alert("Session expired. Please login again.");
-      window.location.href = "/login";
+  const token = getAuthToken();
+  if (!token) {
+    alert("Session expired. Please login again.");
+    window.location.href = "/login";
+    return;
+  }
+
+  const payload = {
+    ownerName: form.ownerName,
+    ownerPhone: form.ownerPhone,
+    ownerEmail: form.ownerEmail,
+    address: form.address,
+
+    propertyType: form.propertyType,
+    usageType: form.usageType,
+    zone: form.zone,
+
+    builtUpArea: Number(form.builtUpArea),
+    constructionYear: Number(form.constructionYear),
+
+    // 🔑 REQUIRED BY buildPropertyDocument
+    finalTaxAmount: taxPreview.finalTax,
+    baseRate: taxPreview.baseRate,
+    zoneMultiplier: taxPreview.zoneMultiplier,
+    usageMultiplier: taxPreview.usageMultiplier,
+    ageFactor: taxPreview.ageFactor,
+
+    paymentStatus: "pending",
+  };
+
+  try {
+    const res = await apiFetch("/api/properties", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error || "Failed to save property");
       return;
     }
 
-    const payload = {
-      ...form,
-      finalTaxAmount: taxPreview.finalTax,
-      paymentStatus: "pending",
-    };
+    alert("✅ Property Added Successfully");
+    window.location.href = "/properties";
+  } catch (err) {
+    console.error("Add property error:", err);
+    alert("Network error. Please try again.");
+  }
+};
 
-    try {
-      const res = await apiFetch("/api/properties", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.error || "Failed to save property");
-        return;
-      }
-
-      alert("✅ Property Added Successfully");
-      window.location.href = "/properties";
-
-    } catch (err) {
-      console.error("Add property error:", err);
-      alert("Network error. Please try again.");
-    }
-  };
 
   // --- Animation Variants ---
   const containerVariants = {
