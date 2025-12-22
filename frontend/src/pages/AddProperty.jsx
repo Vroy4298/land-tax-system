@@ -44,10 +44,6 @@ export default function AddProperty() {
     calculatePreview();
   }, [form]);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
   const calculatePreview = () => {
     const { builtUpArea, propertyType, zone, usageType, constructionYear } = form;
 
@@ -75,8 +71,36 @@ export default function AddProperty() {
     });
   };
 
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     const token = getAuthToken();
+//     if (!token) {
+//       alert("Session expired. Please login again.");
+//       window.location.href = "/login";
+//       return;
+//     }
+
+//     const res = await apiFetch("/api/properties", {
+//   method: "POST",
+//   headers: {
+//     Authorization: `Bearer ${token}`,
+//   },
+//   body: JSON.stringify(payload),
+// });
+
+//     const data = await res.json();
+//     if (res.ok) alert("Property Added!");
+//     else alert(data.error);
+//   };
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  /* ================= SUBMIT ================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const token = getAuthToken();
     if (!token) {
       alert("Session expired. Please login again.");
@@ -84,17 +108,35 @@ export default function AddProperty() {
       return;
     }
 
-    const res = await apiFetch("/api/properties", {
-  method: "POST",
-  headers: {
-    Authorization: `Bearer ${token}`,
-  },
-  body: JSON.stringify(payload),
-});
+    const payload = {
+      ...form,
+      finalTaxAmount: taxPreview.finalTax,
+      paymentStatus: "pending",
+    };
 
-    const data = await res.json();
-    if (res.ok) alert("Property Added!");
-    else alert(data.error);
+    try {
+      const res = await apiFetch("/api/properties", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Failed to save property");
+        return;
+      }
+
+      alert("✅ Property Added Successfully");
+      window.location.href = "/properties";
+
+    } catch (err) {
+      console.error("Add property error:", err);
+      alert("Network error. Please try again.");
+    }
   };
 
   // --- Animation Variants ---
