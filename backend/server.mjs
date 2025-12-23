@@ -14,46 +14,34 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 /* =======================
-   ✅ CORS CONFIG (FIXED)
+   ✅ CORS CONFIG (FINAL)
 ======================= */
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://land-tax-system-g2c5.vercel.app",
-  "https://land-tax-system-two.vercel.app",
-
- 
-  // add any other Vercel preview domain if needed
-];
-
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // allow requests with no origin (Postman, curl)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    origin: [
+      "http://localhost:5173",
+      "https://land-tax-system-g2c5.vercel.app",
+      "https://land-tax-system-two.vercel.app",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+// 🚨 REQUIRED for preflight requests
+app.options("*", cors());
 
 /* =======================
    MIDDLEWARES
 ======================= */
 app.use(express.json());
-app.use(morgan(process.env.LOG_LEVEL || "dev"));
+app.use(morgan("dev"));
 
 /* =======================
    TEST ROUTE
 ======================= */
 app.get("/", (req, res) => {
-  res.json({ message: "Land Tax Backend (Express version)" });
+  res.json({ message: "Land Tax Backend running" });
 });
 
 /* =======================
@@ -69,8 +57,8 @@ app.use("/api/payments", paymentHistoryRoutes);
 ======================= */
 app.use((err, req, res, next) => {
   console.error("💥 Server Error:", err.message);
-  res.status(err.status || 500).json({
-    error: err.message || "Internal Server Error",
+  res.status(500).json({
+    error: "Internal Server Error",
   });
 });
 
