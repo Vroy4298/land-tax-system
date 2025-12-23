@@ -14,7 +14,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 /* =======================
-   ✅ CORS CONFIG (FINAL)
+   ✅ CORS CONFIG (NODE 22 SAFE)
 ======================= */
 app.use(
   cors({
@@ -27,9 +27,6 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
-// 🚨 REQUIRED for preflight requests
-app.options("*", cors());
 
 /* =======================
    MIDDLEWARES
@@ -57,9 +54,7 @@ app.use("/api/payments", paymentHistoryRoutes);
 ======================= */
 app.use((err, req, res, next) => {
   console.error("💥 Server Error:", err.message);
-  res.status(500).json({
-    error: "Internal Server Error",
-  });
+  res.status(500).json({ error: "Internal Server Error" });
 });
 
 /* =======================
