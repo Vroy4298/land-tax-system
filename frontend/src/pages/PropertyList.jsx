@@ -16,28 +16,28 @@ import {
 import Loader from "../components/Loader";
 import EmptyState from "../components/EmptyState";
 import { getAuthToken } from "../utils/auth";
+import { apiFetch } from "../utils/api";
 
-// Animation Variants for Staggered List
+/* ---------------- ANIMATION VARIANTS ---------------- */
 const containerVariants = {
   hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.1
-    }
-  }
+  visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } }
 };
 
 const rowVariants = {
   hidden: { opacity: 0, y: 15 },
-  visible: { 
-    opacity: 1, 
-    y: 0,
-    transition: { type: "spring", stiffness: 300, damping: 24 }
-  },
+  visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
   exit: { opacity: 0, x: -20 }
 };
+
+/* ---------------- FORMATTERS ---------------- */
+const formatUsage = (u) =>
+  u === "self" ? "Self-Occupied" :
+  u === "rented" ? "Rented" :
+  u;
+
+const formatType = (t) =>
+  t?.charAt(0).toUpperCase() + t?.slice(1);
 
 export default function PropertyList() {
   const [properties, setProperties] = useState([]);
@@ -48,6 +48,7 @@ export default function PropertyList() {
     loadProperties();
   }, []);
 
+  /* ---------------- LOAD PROPERTIES ---------------- */
   const loadProperties = async () => {
     try {
       const token = getAuthToken();
@@ -56,19 +57,20 @@ export default function PropertyList() {
         return;
       }
 
-      const res = await fetch("http://localhost:5000/api/properties", {
+      const res = await apiFetch("/api/properties", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       const data = await res.json();
       if (res.ok) setProperties(data);
     } catch (err) {
-      console.error("Error:", err);
+      console.error("Load properties error:", err);
     } finally {
       setLoading(false);
     }
   };
 
+  /* ---------------- DELETE ---------------- */
   const handleDelete = async (id) => {
     if (!confirm("Delete this property?")) return;
 
@@ -76,24 +78,12 @@ export default function PropertyList() {
 
     try {
       const token = getAuthToken();
-      if (!token) {
-        alert("Session expired. Please login again.");
-        window.location.href = "/login";
-        return;
-      }
-
-      const res = await fetch(
-        `http://localhost:5000/api/properties/${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await apiFetch(`/api/properties/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       const data = await res.json();
-
       if (!res.ok) {
         alert(data.error || "Delete failed");
         return;
@@ -111,7 +101,7 @@ export default function PropertyList() {
   const formatINR = (n) =>
     "₹" + Number(n).toLocaleString("en-IN", { maximumFractionDigits: 0 });
 
-  // ⭐ If loading, return clean full-page loader
+  /* ---------------- LOADER ---------------- */
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-[#0b1220]">
