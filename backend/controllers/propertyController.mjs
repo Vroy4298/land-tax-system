@@ -11,7 +11,7 @@ import { getPropertyCollection, buildPropertyDocument } from "../models/Property
 /* ---------------------- ADD PROPERTY ---------------------- */
 export const addProperty = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const body = req.body;
     const propertyDoc = buildPropertyDocument(body, userId);
     const collection = await getPropertyCollection();
@@ -31,7 +31,7 @@ export const addProperty = async (req, res) => {
 /* ---------------------- GET ALL PROPERTIES ---------------------- */
 export const getMyProperties = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const filters = req.query;
 
     const {
@@ -101,7 +101,7 @@ export const getPropertyById = async (req, res) => {
 /* ---------------------- UPDATE PROPERTY ---------------------- */
 export const updateProperty = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const propertyId = req.params.id;
     const body = req.body;
 
@@ -144,7 +144,7 @@ export const updateProperty = async (req, res) => {
 /* ---------------------- DELETE PROPERTY ---------------------- */
 export const deleteProperty = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const propertyId = req.params.id;
 
     if (!ObjectId.isValid(propertyId)) {
@@ -171,7 +171,7 @@ export const deleteProperty = async (req, res) => {
 /* ---------------------- MARK AS PAID ---------------------- */
 export const markAsPaid = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const propertyId = req.params.id;
 
     const collection = await getPropertyCollection();
@@ -205,7 +205,7 @@ export const markAsPaid = async (req, res) => {
 /* ---------------------- PDF RECEIPT DOWNLOAD ---------------------- */
 export const downloadReceipt = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const propertyId = req.params.id;
 
     const collection = await getPropertyCollection();
