@@ -11,22 +11,38 @@ import { getPropertyCollection, buildPropertyDocument } from "../models/Property
 /* ---------------------- ADD PROPERTY ---------------------- */
 export const addProperty = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const body = req.body;
-    const propertyDoc = buildPropertyDocument(body, userId);
-    const collection = await getPropertyCollection();
+    console.log("=== ADD PROPERTY HIT ===");
+    console.log("req.user:", req.user);
+    console.log("req.body:", req.body);
 
-    await collection.insertOne(propertyDoc);
+    const userId = req.user.id;
+    console.log("userId:", userId);
+
+    if (!userId) {
+      return res.status(400).json({ error: "User ID missing from token" });
+    }
+
+    const propertyDoc = buildPropertyDocument(req.body, userId);
+    console.log("propertyDoc:", propertyDoc);
+
+    const collection = await getPropertyCollection();
+    const result = await collection.insertOne(propertyDoc);
+
+    console.log("insert result:", result);
 
     res.status(201).json({
       message: "Property added successfully",
       tax: propertyDoc.finalTaxAmount,
     });
   } catch (err) {
-    console.error("Add property error:", err);
-    res.status(500).json({ error: "Server error" });
+    console.error("🔥 ADD PROPERTY CRASH:", err);
+    res.status(500).json({
+      error: err.message,
+      stack: err.stack,
+    });
   }
 };
+
 
 /* ---------------------- GET ALL PROPERTIES ---------------------- */
 export const getMyProperties = async (req, res) => {
