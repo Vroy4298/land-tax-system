@@ -60,7 +60,14 @@ const usageMultiplier = {
 
   /* ---------------- AGE FACTOR ---------------- */
   const currentYear = new Date().getFullYear();
-  const age = currentYear - Number(constructionYear);
+  const area = Number(builtUpArea) || 0;
+  const year = Number(constructionYear);
+
+  const age =
+  !year || isNaN(year)
+    ? 0
+    : currentYear - year;
+
 
   let ageFactor = 1.0;
   if (age >= 11 && age <= 20) ageFactor = 0.9;
@@ -69,11 +76,11 @@ const usageMultiplier = {
 
   /* ---------------- FINAL TAX ---------------- */
   const finalTaxAmount =
-    Number(builtUpArea) *
-    (baseRates[cleanType] || 1) *
-    (zoneMultiplier[cleanZone] || 1) *
-    (usageMultiplier[cleanUsage] || 1) *
-    ageFactor;
+  area *
+  (baseRates[cleanType] || 1) *
+  (zoneMultiplier[cleanZone] || 1) *
+  (usageMultiplier[cleanUsage] || 1) *
+  ageFactor;
 
   return {
     ownerName,
