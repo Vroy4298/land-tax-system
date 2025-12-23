@@ -27,10 +27,17 @@ export const buildPropertyDocument = (data, userId) => {
   } = data;
 
   /* ---------------- NORMALIZATION ---------------- */
-  const cleanType = String(propertyType).toLowerCase();   
-  const cleanUsage = String(usageType)
-  .toLowerCase()
-  .replace(/\s+/g, "-");
+  const cleanType =
+  propertyType === "Residential" ? "residential" :
+  propertyType === "Commercial" ? "commercial" :
+  propertyType === "Industrial" ? "industrial" :
+  "residential";
+  
+  const cleanUsage =
+  usageType === "Self-Occupied" ? "self" :
+  usageType === "Rented" ? "rented" :
+  "self";
+
    
   const cleanZone = String(zone).toUpperCase();           
 
@@ -45,9 +52,9 @@ export const buildPropertyDocument = (data, userId) => {
   /* ---------------- MULTIPLIERS ---------------- */
   const zoneMultiplier = { A: 1.3, B: 1.1, C: 1.0 };
 
-  const usageMultiplier = {
-  "self-occupied": 1.0,
-  "rented": 1.2,
+const usageMultiplier = {
+  self: 1.0,
+  rented: 1.2,
 };
 
 
