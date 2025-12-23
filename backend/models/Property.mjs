@@ -13,18 +13,19 @@ export async function getPropertyCollection() {
 }
 
 // Build document for add/update
-export const buildPropertyDocument = (data, userId) => {
+export const buildPropertyDocument = (data = {}, userId) => {
   const {
-    ownerName,
-    ownerPhone,
-    ownerEmail,
-    address,
-    propertyType,
-    usageType,
-    zone,
-    builtUpArea,
-    constructionYear,
+    ownerName = "",
+    ownerPhone = "",
+    ownerEmail = "",
+    address = "",
+    propertyType = "",
+    usageType = "",
+    zone = "",
+    builtUpArea = 0,
+    constructionYear = "",
   } = data;
+
 
   /* ---------------- NORMALIZATION ---------------- */
   const cleanType =

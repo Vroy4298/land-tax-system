@@ -132,7 +132,7 @@ export default function AddProperty() {
   };
 
   try {
-    const res = await apiFetch("/api/properties", {
+    const res = await apiFetch("/properties", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
