@@ -98,7 +98,7 @@ export default function AddProperty() {
   };
 
   /* ================= SUBMIT ================= */
- const handleSubmit = async (e) => {
+    const handleSubmit = async (e) => {
   e.preventDefault();
 
   const token = getAuthToken();
@@ -120,19 +120,10 @@ export default function AddProperty() {
 
     builtUpArea: Number(form.builtUpArea),
     constructionYear: Number(form.constructionYear),
-
-    // 🔑 REQUIRED BY buildPropertyDocument
-    finalTaxAmount: taxPreview.finalTax,
-    baseRate: taxPreview.baseRate,
-    zoneMultiplier: taxPreview.zoneMultiplier,
-    usageMultiplier: taxPreview.usageMultiplier,
-    ageFactor: taxPreview.ageFactor,
-
-    paymentStatus: "pending",
   };
 
   try {
-    const res = await apiFetch("/properties", {
+    const res = await apiFetch("/properties", {   // ✅ FIXED
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -154,6 +145,7 @@ export default function AddProperty() {
     alert("Network error. Please try again.");
   }
 };
+
 
 
   // --- Animation Variants ---
