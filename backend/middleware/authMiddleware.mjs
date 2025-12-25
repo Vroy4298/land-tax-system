@@ -15,7 +15,8 @@ export const authMiddleware = (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.user = { id: decoded.id };
+    req.user = { id: decoded.id || decoded._id };
+
     next();
   } catch (err) {
     console.error("Token verification failed:", err.message);

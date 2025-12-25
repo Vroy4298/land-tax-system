@@ -44,6 +44,7 @@ export const addProperty = async (req, res) => {
 };
 
 
+
 /* ---------------------- GET ALL PROPERTIES ---------------------- */
 export const getMyProperties = async (req, res) => {
   try {
