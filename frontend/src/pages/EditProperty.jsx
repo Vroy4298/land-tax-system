@@ -192,17 +192,17 @@ export default function EditProperty() {
     try {
       const token = getAuthToken();
 
-      const res = await fetch(`http://localhost:5000/api/properties/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          ...form,
-          finalTaxAmount: taxPreview.finalTaxAmount,
-        }),
-      });
+      const res = await apiFetch(`/api/properties/${id}`, {
+  method: "PUT",
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+  body: JSON.stringify({
+    ...form,
+    finalTaxAmount: taxPreview.finalTaxAmount,
+  }),
+});
+
 
       const data = await res.json();
       if (res.ok) {
@@ -223,10 +223,13 @@ export default function EditProperty() {
 
     try {
       const token = getAuthToken();
-      const res = await fetch(`http://localhost:5000/api/properties/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiFetch(`/api/properties/${id}`, {
+      method: "DELETE",
+      headers: {
+      Authorization: `Bearer ${token}`,
+      },
+     });
+
 
       const data = await res.json();
       if (res.ok) {
