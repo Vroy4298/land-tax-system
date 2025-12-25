@@ -23,26 +23,18 @@ export default function ForgotPassword() {
 
     try {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/forgot-password`, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({ email }),
-});
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    });
 
-      //  await fetch(
-      //   "http://localhost:5000/api/users/forgot-password",
-      //   {
-      //     method: "POST",
-      //     headers: { "Content-Type": "application/json" },
-      //     body: JSON.stringify({ email }),
-      //   }
-      // );
+    // always success toast
+    toast.success(
+      "If this email is registered, a password reset link has been sent."
+    );
 
-      // We maintain the original security practice: don't reveal if email exists
-      toast.success(
-        "If this email is registered, a password reset link has been sent."
-      );
       setEmail("");
     } catch (err) {
       toast.error("Network error. Please try again.");
