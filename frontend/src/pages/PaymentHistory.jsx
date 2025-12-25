@@ -1,6 +1,8 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { apiFetch } from "../utils/api";
+
 import { 
   Download, 
   FileText, 
@@ -50,9 +52,12 @@ export default function PaymentHistory() {
         return;
       }
 
-      const res = await fetch("http://localhost:5000/api/properties", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiFetch("/api/properties", {
+      headers: {
+      Authorization: `Bearer ${token}`,
+      },
+    });
+
 
       const data = await res.json();
 
@@ -75,12 +80,12 @@ export default function PaymentHistory() {
   const downloadReceipt = async (propertyId) => {
     try {
       const token = getAuthToken();
-      const res = await fetch(
-        `http://localhost:5000/api/properties/${propertyId}/receipt`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const res = await apiFetch("/api/properties", {
+      headers: {
+      Authorization: `Bearer ${token}`,
+      },
+  });
+
 
       if (!res.ok) {
         alert("Failed to download receipt.");
