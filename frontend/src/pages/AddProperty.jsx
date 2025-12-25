@@ -123,13 +123,10 @@ export default function AddProperty() {
   };
 
   try {
-    const res = await apiFetch("/properties", {   // ✅ FIXED
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
+    const res = await apiFetch("/api/properties", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 
     const data = await res.json();
 
