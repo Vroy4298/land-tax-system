@@ -36,9 +36,10 @@ export default function ForgotPassword() {
     );
 
       setEmail("");
-    } catch (err) {
-      toast.error("Network error. Please try again.");
-    } finally {
+    }catch (err) {
+  console.error(err);
+  toast.error("Unable to send reset link. Please try again later.");
+} finally {
       setLoading(false);
     }
   };
