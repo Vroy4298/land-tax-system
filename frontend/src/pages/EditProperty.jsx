@@ -18,6 +18,7 @@ import {
   CheckCircle2,
   AlertCircle
 } from "lucide-react";
+import { apiFetch } from "../utils/api";
 import { getAuthToken } from "../utils/auth";
 import Loader from "../components/Loader";
 
@@ -54,17 +55,20 @@ export default function EditProperty() {
   });
 
   useEffect(() => {
-    const fetchProperty = async () => {
-      setLoading(true);
-      try {
-        const token = getAuthToken();
-        if (!token) {
-          window.location.href = "/login";
-          return;
-        }
-        const res = await fetch(`http://localhost:5000/api/properties/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+  const fetchProperty = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        alert("Session expired. Please login again.");
+        window.location.href = "/login";
+        return;
+      }
+
+      const res = await apiFetch(`/api/properties/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
         const data = await res.json();
         if (res.ok) {
