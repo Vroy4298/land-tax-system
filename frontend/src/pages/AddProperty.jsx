@@ -142,9 +142,6 @@ export default function AddProperty() {
     alert("Network error. Please try again.");
   }
 };
-
-
-
   // --- Animation Variants ---
   const containerVariants = {
     hidden: { opacity: 0 },
