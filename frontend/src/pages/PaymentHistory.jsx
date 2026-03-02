@@ -3,13 +3,13 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { apiFetch } from "../utils/api";
 
-import { 
-  Download, 
-  FileText, 
-  Calendar, 
-  CreditCard, 
-  User, 
-  MapPin, 
+import {
+  Download,
+  FileText,
+  Calendar,
+  CreditCard,
+  User,
+  MapPin,
   Receipt,
   CheckCircle2
 } from "lucide-react";
@@ -20,18 +20,18 @@ import { getAuthToken } from "../utils/auth";
 // Animation Variants
 const containerVariants = {
   hidden: { opacity: 0 },
-  visible: { 
-    opacity: 1, 
-    transition: { staggerChildren: 0.08 } 
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08 }
   }
 };
 
 const rowVariants = {
   hidden: { opacity: 0, y: 10 },
-  visible: { 
-    opacity: 1, 
-    y: 0, 
-    transition: { type: "spring", stiffness: 300, damping: 24 } 
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 300, damping: 24 }
   }
 };
 
@@ -53,10 +53,10 @@ export default function PaymentHistory() {
       }
 
       const res = await apiFetch("/api/properties", {
-      headers: {
-      Authorization: `Bearer ${token}`,
-      },
-    });
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
 
       const data = await res.json();
@@ -80,15 +80,33 @@ export default function PaymentHistory() {
   const downloadReceipt = async (propertyId) => {
     try {
       const token = getAuthToken();
-      const res = await apiFetch("/api/properties", {
-      headers: {
-      Authorization: `Bearer ${token}`,
-      },
-  });
+      const BASE_URL = import.meta.env.VITE_API_URL;
 
+      // Use raw fetch (NOT apiFetch) to avoid injecting Content-Type: application/json
+      // on a binary PDF request, which can corrupt the download on some proxies/CDNs
+      const res = await fetch(`${BASE_URL}/api/properties/${propertyId}/receipt`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!res.ok) {
-        alert("Failed to download receipt.");
+        // Try to read error message from server
+        const contentType = res.headers.get("Content-Type") || "";
+        let errorMsg = `Server error: ${res.status}`;
+        if (contentType.includes("application/json")) {
+          const errData = await res.json();
+          errorMsg = errData.error || errorMsg;
+        }
+        alert(`Failed to download receipt. ${errorMsg}`);
+        return;
+      }
+
+      // Safety check: make sure we actually got a PDF back
+      const contentType = res.headers.get("Content-Type") || "";
+      if (!contentType.includes("application/pdf")) {
+        alert("Receipt generation failed. The server returned an unexpected response. Please try again in a few seconds (the server may be waking up).");
         return;
       }
 
@@ -98,12 +116,14 @@ export default function PaymentHistory() {
       const a = document.createElement("a");
       a.href = url;
       a.download = `receipt_${propertyId}.pdf`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
 
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error("Receipt download error:", err);
-      alert("Error downloading receipt.");
+      alert("Error downloading receipt. Please check your connection and try again.");
     }
   };
 
@@ -140,11 +160,11 @@ export default function PaymentHistory() {
   ======================= */
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0b1220] font-sans transition-colors duration-300">
-      
+
       <div className="max-w-7xl mx-auto px-6 md:px-8 pt-32 pb-16">
-        
+
         {/* Header */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-10"
@@ -161,7 +181,7 @@ export default function PaymentHistory() {
         </motion.div>
 
         {/* Financial Table Card */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
@@ -189,15 +209,15 @@ export default function PaymentHistory() {
                 </tr>
               </thead>
 
-              <motion.tbody 
+              <motion.tbody
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
                 className="bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800"
               >
                 {payments.map((p) => (
-                  <motion.tr 
-                    key={p._id} 
+                  <motion.tr
+                    key={p._id}
                     variants={rowVariants}
                     className="group hover:bg-blue-50/30 dark:hover:bg-slate-800/40 transition-colors duration-200"
                   >
@@ -257,16 +277,16 @@ export default function PaymentHistory() {
               </motion.tbody>
             </table>
           </div>
-          
+
           {/* Footer */}
           <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
-             <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-               <CreditCard size={14} />
-               <span>Secured by Digital Land Registry</span>
-             </div>
-             <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-               Total Records: {payments.length}
-             </span>
+            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+              <CreditCard size={14} />
+              <span>Secured by Digital Land Registry</span>
+            </div>
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+              Total Records: {payments.length}
+            </span>
           </div>
         </motion.div>
       </div>
