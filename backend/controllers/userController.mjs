@@ -215,8 +215,14 @@ export const getAllUsers = async (req, res) => {
 /* ---------------------- MAKE ADMIN (SEED ONLY) ---------------------- */
 export const makeAdmin = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, seedSecret } = req.body;
     if (!email) return res.status(400).json({ error: "Email is required" });
+
+    // Must provide the seed secret from env vars
+    const expectedSecret = process.env.ADMIN_SEED_SECRET;
+    if (!expectedSecret || seedSecret !== expectedSecret) {
+      return res.status(403).json({ error: "Invalid seed secret" });
+    }
 
     const db = await connectDB();
     const users = db.collection("users");
