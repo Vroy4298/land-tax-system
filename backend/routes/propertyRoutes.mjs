@@ -6,8 +6,10 @@ import {
   updateProperty,
   deleteProperty,
   markAsPaid,
-  downloadReceipt
+  downloadReceipt,
+  payInstallment
 } from "../controllers/propertyController.mjs";
+import { upload, uploadDocument, getDocuments } from "../controllers/documentController.mjs";
 
 import { authMiddleware } from "../middleware/authMiddleware.mjs";
 
@@ -36,6 +38,13 @@ router.post("/:id/mark-paid", markAsPaid);
 
 // Download receipt
 router.get("/:id/receipt", downloadReceipt);
+
+// Documents
+router.post("/:id/documents", upload.single("file"), uploadDocument);
+router.get("/:id/documents", getDocuments);
+
+// Installment payment
+router.post("/:id/installment", payInstallment);
 
 // 🚀 MOST IMPORTANT LINE
 export default router;

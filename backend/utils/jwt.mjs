@@ -4,9 +4,9 @@ dotenv.config();
 
 export const generateToken = (user) => {
   return jwt.sign(
-    { id: user._id.toString(), email: user.email },
+    { id: user._id.toString(), email: user.email, role: user.role || "citizen" },
     process.env.JWT_SECRET,
-    { expiresIn: "2h" }
+    { expiresIn: "7d" }
   );
 };
 

@@ -19,7 +19,11 @@ import {
   Phone,
   Copy,
   MessageSquare,
-  CreditCard
+  CreditCard,
+  Upload,
+  FolderOpen,
+  BarChart2,
+  IndianRupee,
 } from "lucide-react";
 import Loader from "../components/Loader";
 import EmptyState from "../components/EmptyState";
@@ -47,36 +51,52 @@ export default function PropertyDetails() {
   const [error, setError] = useState(null);
   const [paying, setPaying] = useState(false);
 
+  // Documents state
+  const [documents, setDocuments] = useState([]);
+  const [docUploading, setDocUploading] = useState(false);
+  const [docFile, setDocFile] = useState(null);
+
+  // Installment state
+  const [installAmt, setInstallAmt] = useState("");
+  const [installPaying, setInstallPaying] = useState(false);
+  const [installMsg, setInstallMsg] = useState("");
+
   /* 🔹 Share dropdown */
   const [showShare, setShowShare] = useState(false);
   const shareRef = useRef(null);
 
   /* ---------------- FETCH PROPERTY ---------------- */
   useEffect(() => {
-  const fetchProperty = async () => {
-    const token = getAuthToken();
-    if (!token) return navigate("/login");
+    const fetchProperty = async () => {
+      const token = getAuthToken();
+      if (!token) return navigate("/login");
 
-    try {
-      const res = await apiFetch(`/api/properties/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      try {
+        const res = await apiFetch(`/api/properties/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-      if (!res.ok) throw new Error("Property not found");
+        if (!res.ok) throw new Error("Property not found");
 
-      const data = await res.json();
-      setProperty(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+        const data = await res.json();
+        setProperty(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  fetchProperty();
-}, [id]);
+    fetchProperty();
+
+    // Fetch documents for this property
+    apiFetch(`/api/properties/${id}/documents`)
+      .then((r) => r.json())
+      .then((d) => setDocuments(Array.isArray(d) ? d : []))
+      .catch(() => { });
+  }, [id]);
 
 
   /* 🔹 Close share dropdown on outside click */
@@ -120,9 +140,9 @@ export default function PropertyDetails() {
   /* ---------------- PRINT HANDLER ---------------- */
   const handlePrint = () => {
     window.open(
-  `${import.meta.env.VITE_API_URL}/api/properties/${property._id}/receipt`,
-  "_blank"
-);
+      `${import.meta.env.VITE_API_URL}/api/properties/${property._id}/receipt`,
+      "_blank"
+    );
 
   };
 
@@ -134,11 +154,11 @@ export default function PropertyDetails() {
       const token = getAuthToken();
 
       const res = await apiFetch(`/api/pay-tax/pay/${property._id}`, {
-      method: "POST",
-     headers: {
-     Authorization: `Bearer ${token}`,
-     },
-    });
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const data = await res.json();
 
@@ -161,6 +181,50 @@ export default function PropertyDetails() {
     } finally {
       setPaying(false);
     }
+  };
+
+  /* ------------ UPLOAD DOCUMENT ------------ */
+  const handleUploadDoc = async (e) => {
+    e.preventDefault();
+    if (!docFile) return;
+    setDocUploading(true);
+    const formData = new FormData();
+    formData.append("file", docFile);
+    const BASE_URL = import.meta.env.VITE_API_URL;
+    const token = getAuthToken();
+    const res = await fetch(`${BASE_URL}/api/properties/${id}/documents`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setDocuments((prev) => [...prev, data.document]);
+      setDocFile(null);
+    }
+    setDocUploading(false);
+  };
+
+  /* ------------ PAY INSTALLMENT ------------ */
+  const handleInstallment = async (e) => {
+    e.preventDefault();
+    if (!installAmt) return;
+    setInstallPaying(true);
+    setInstallMsg("");
+    const res = await apiFetch(`/api/properties/${id}/installment`, {
+      method: "POST",
+      body: JSON.stringify({ amount: Number(installAmt) }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setInstallMsg(data.message);
+      setInstallAmt("");
+      // Refresh property
+      apiFetch(`/api/properties/${id}`).then((r) => r.json()).then(setProperty);
+    } else {
+      setInstallMsg(data.error || "Failed");
+    }
+    setInstallPaying(false);
   };
 
   /* ---------------- LOADING ---------------- */
@@ -220,7 +284,7 @@ export default function PropertyDetails() {
 
               <AnimatePresence>
                 {showShare && (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, scale: 0.95, y: 10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -294,7 +358,7 @@ export default function PropertyDetails() {
                     <MapPin size={18} className="shrink-0 text-slate-400" /> {property.address}
                   </p>
                 </div>
-                
+
                 <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-3xl shadow-xl shadow-blue-500/30 shrink-0">
                   {property.ownerName?.charAt(0)}
                 </div>
@@ -311,7 +375,7 @@ export default function PropertyDetails() {
                   </div>
                   <h3 className="text-lg font-bold text-slate-900 dark:text-white">Owner Details</h3>
                 </div>
-                
+
                 <div className="space-y-6">
                   <InfoItem label="Full Name" value={property.ownerName} icon={<User size={14} />} />
                   <InfoItem label="Email" value={property.ownerEmail || "Not provided"} icon={<Mail size={14} />} />
@@ -340,8 +404,8 @@ export default function PropertyDetails() {
 
           {/* RIGHT COLUMN: TAX SUMMARY */}
           <div className="lg:col-span-4 lg:sticky lg:top-36">
-            <motion.div 
-              variants={itemVariants} 
+            <motion.div
+              variants={itemVariants}
               className="bg-slate-900 text-white rounded-3xl p-8 shadow-2xl shadow-slate-900/40 border border-slate-800 relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
@@ -361,11 +425,10 @@ export default function PropertyDetails() {
                 <div className="space-y-4 bg-slate-800/50 rounded-2xl p-5 border border-slate-700/50 mb-8">
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-slate-400">Status</span>
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
-                      property.paymentStatus === "paid" 
-                        ? "bg-emerald-500/10 text-emerald-400" 
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${property.paymentStatus === "paid"
+                        ? "bg-emerald-500/10 text-emerald-400"
                         : "bg-amber-500/10 text-amber-400"
-                    }`}>
+                      }`}>
                       <div className={`w-1.5 h-1.5 rounded-full ${property.paymentStatus === 'paid' ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`}></div>
                       {property.paymentStatus.charAt(0).toUpperCase() + property.paymentStatus.slice(1)}
                     </span>
@@ -376,7 +439,7 @@ export default function PropertyDetails() {
                   </div>
                 </div>
 
-                <button 
+                <button
                   onClick={property.paymentStatus === 'paid' ? handlePrint : handlePayNow}
                   disabled={paying}
                   className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl shadow-xl shadow-blue-600/30 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
@@ -395,7 +458,7 @@ export default function PropertyDetails() {
                     </>
                   )}
                 </button>
-                
+
                 {property.paymentStatus === 'paid' && (
                   <p className="mt-4 text-center text-xs text-slate-500">
                     Payment successfully processed on {new Date(property.paymentDate).toLocaleDateString()}
@@ -413,6 +476,119 @@ export default function PropertyDetails() {
           </div>
 
         </motion.div>
+
+        {/* DOCUMENTS SECTION */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="mt-8 bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-slate-800"
+        >
+          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
+            <div className="p-2.5 bg-violet-50 dark:bg-violet-900/20 rounded-xl text-violet-600 dark:text-violet-400">
+              <FolderOpen size={20} />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Property Documents</h3>
+          </div>
+
+          {/* Upload Form */}
+          <form onSubmit={handleUploadDoc} className="flex gap-3 mb-5">
+            <label className="flex-1 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 cursor-pointer hover:border-violet-400 transition text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2">
+              <Upload size={15} />
+              {docFile ? docFile.name : "Choose a PDF, JPG, or PNG file…"}
+              <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setDocFile(e.target.files[0])} className="hidden" />
+            </label>
+            <button type="submit" disabled={!docFile || docUploading}
+              className="px-5 py-2.5 rounded-xl bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 disabled:opacity-50 transition">
+              {docUploading ? "Uploading…" : "Upload"}
+            </button>
+          </form>
+
+          {/* Documents List */}
+          {documents.length === 0 ? (
+            <p className="text-sm text-slate-400 dark:text-slate-500">No documents uploaded yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {documents.map((doc, i) => (
+                <a key={i} href={doc.url} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition group">
+                  <FileText size={16} className="text-violet-500 shrink-0" />
+                  <span className="text-sm text-slate-700 dark:text-slate-300 group-hover:text-violet-600 font-medium truncate">{doc.name}</span>
+                  <span className="text-xs text-slate-400 ml-auto shrink-0">{new Date(doc.uploadedAt).toLocaleDateString()}</span>
+                </a>
+              ))}
+            </div>
+          )}
+        </motion.div>
+
+        {/* INSTALLMENT SECTION — only for pending properties */}
+        {property.paymentStatus !== "paid" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mt-8 bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-slate-800"
+          >
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="p-2.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl text-emerald-600 dark:text-emerald-400">
+                <BarChart2 size={20} />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Pay in Installments</h3>
+            </div>
+
+            {/* Progress Bar */}
+            {(() => {
+              const paid = property.amountPaid || 0;
+              const total = property.finalTaxAmount || 1;
+              const pct = Math.min(100, Math.round((paid / total) * 100));
+              return (
+                <div className="mb-6">
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-slate-500 dark:text-slate-400">Paid so far</span>
+                    <span className="font-bold text-slate-800 dark:text-white">₹{paid.toLocaleString("en-IN")} / ₹{total.toLocaleString("en-IN")}</span>
+                  </div>
+                  <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1">{pct}% complete — ₹{Math.max(0, total - paid).toLocaleString("en-IN")} remaining</p>
+                </div>
+              );
+            })()}
+
+            {/* Installment History */}
+            {(property.installments || []).length > 0 && (
+              <div className="mb-5 space-y-2">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">History</p>
+                {property.installments.map((inst, i) => (
+                  <div key={i} className="flex justify-between text-sm px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                    <span className="text-slate-500">{new Date(inst.paidAt).toLocaleDateString()}</span>
+                    <span className="font-semibold text-emerald-600">+₹{Number(inst.amount).toLocaleString("en-IN")}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Pay Form */}
+            <form onSubmit={handleInstallment} className="flex gap-3">
+              <div className="relative flex-1">
+                <IndianRupee size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="number" min="1" max={property.finalTaxAmount}
+                  value={installAmt}
+                  onChange={(e) => setInstallAmt(e.target.value)}
+                  placeholder="Enter amount"
+                  className="w-full pl-8 pr-3 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              <button type="submit" disabled={!installAmt || installPaying}
+                className="px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 transition">
+                {installPaying ? "Processing…" : "Pay"}
+              </button>
+            </form>
+            {installMsg && <p className="mt-2 text-sm font-medium text-emerald-600 dark:text-emerald-400">{installMsg}</p>}
+          </motion.div>
+        )}
+
       </div>
     </div>
   );

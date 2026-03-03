@@ -28,6 +28,7 @@ export const registerUser = async (req, res) => {
       name,
       email,
       password: hashed,
+      role: "citizen",
       createdAt: new Date(),
     });
 
@@ -191,6 +192,42 @@ export const resetPassword = async (req, res) => {
     return res.json({ message: "Password reset successful" });
   } catch (err) {
     console.error("Reset password error:", err);
+    return res.status(500).json({ error: "Server error" });
+  }
+};
+
+/* ---------------------- GET ALL USERS (ADMIN) ---------------------- */
+export const getAllUsers = async (req, res) => {
+  try {
+    const db = await connectDB();
+    const users = db.collection("users");
+    const allUsers = await users
+      .find({}, { projection: { password: 0, resetPasswordToken: 0, resetPasswordExpires: 0 } })
+      .sort({ createdAt: -1 })
+      .toArray();
+    return res.json(allUsers);
+  } catch (err) {
+    console.error("Get all users error:", err);
+    return res.status(500).json({ error: "Server error" });
+  }
+};
+
+/* ---------------------- MAKE ADMIN (SEED ONLY) ---------------------- */
+export const makeAdmin = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: "Email is required" });
+
+    const db = await connectDB();
+    const users = db.collection("users");
+
+    const result = await users.updateOne({ email }, { $set: { role: "admin" } });
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    return res.json({ message: `${email} is now an admin` });
+  } catch (err) {
+    console.error("Make admin error:", err);
     return res.status(500).json({ error: "Server error" });
   }
 };

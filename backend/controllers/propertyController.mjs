@@ -254,9 +254,9 @@ export const downloadReceipt = async (req, res) => {
     // Rotated, centered, faint watermark
     doc.save();
     doc.font("Helvetica-Bold")
-       .fontSize(60)
-       .fillColor("#e6e6e6")
-       .opacity(0.10); // Subtle but visible
+      .fontSize(60)
+      .fillColor("#e6e6e6")
+      .opacity(0.10); // Subtle but visible
 
     doc.rotate(45, { origin: [centerX, pageHeight / 2] });
     doc.text("OFFICIAL RECEIPT", centerX - 300, pageHeight / 2, {
@@ -280,32 +280,32 @@ export const downloadReceipt = async (req, res) => {
 
     // 2. Title & Subtitle
     doc.fontSize(18)
-       .font("Helvetica-Bold")
-       .fillColor("#1a237e") // Official Blue
-       .text("LAND TAX PAYMENT RECEIPT", 0, currentY, { align: "center" });
-    
+      .font("Helvetica-Bold")
+      .fillColor("#1a237e") // Official Blue
+      .text("LAND TAX PAYMENT RECEIPT", 0, currentY, { align: "center" });
+
     currentY += 25;
 
     doc.fontSize(10)
-       .font("Helvetica")
-       .fillColor("#6b7280") // Slate Gray
-       .text("Government Authorized Digital Record", 0, currentY, { align: "center" });
+      .font("Helvetica")
+      .fillColor("#6b7280") // Slate Gray
+      .text("Government Authorized Digital Record", 0, currentY, { align: "center" });
 
     currentY += 20;
 
     // 3. Divider Line
     doc.moveTo(margin, currentY)
-       .lineTo(pageWidth - margin, currentY)
-       .strokeColor("#e5e7eb")
-       .lineWidth(1)
-       .stroke();
-    
+      .lineTo(pageWidth - margin, currentY)
+      .strokeColor("#e5e7eb")
+      .lineWidth(1)
+      .stroke();
+
     currentY += 20;
 
     /* ---------------- META INFO ROW ---------------- */
     // Two columns: Receipt ID (Left) | Date (Right)
     const metaY = currentY;
-    
+
     // Left
     doc.font("Helvetica-Bold").fontSize(10).fillColor("#374151").text("Receipt ID:", margin, metaY);
     doc.font("Helvetica").fontSize(10).fillColor("#000000").text(p.receiptId || "N/A", margin + 70, metaY);
@@ -320,7 +320,7 @@ export const downloadReceipt = async (req, res) => {
     // Section Header Box
     doc.rect(margin, currentY, pageWidth - (margin * 2), 25).fill("#f3f4f6");
     doc.fillColor("#1a237e").font("Helvetica-Bold").fontSize(11).text("PROPERTY DETAILS", margin + 10, currentY + 7);
-    
+
     currentY += 35;
 
     // Helper for rows
@@ -329,7 +329,7 @@ export const downloadReceipt = async (req, res) => {
       doc.font("Helvetica-Bold").fontSize(10).fillColor("#111827").text(value || "N/A", margin + 140, y);
     };
 
-    drawRow("Owner Name", p.ownerName, currentY); 
+    drawRow("Owner Name", p.ownerName, currentY);
     currentY += 20;
 
     // Address (Handle wrap)
@@ -347,7 +347,7 @@ export const downloadReceipt = async (req, res) => {
     // Row 1
     doc.font("Helvetica").fillColor("#6b7280").text("Type", col1X, currentY);
     doc.font("Helvetica-Bold").fillColor("#111827").text(p.propertyType, col1ValX, currentY);
-    
+
     doc.font("Helvetica").fillColor("#6b7280").text("Zone", col2X, currentY);
     doc.font("Helvetica-Bold").fillColor("#111827").text(p.zone, col2ValX, currentY);
     currentY += 20;
@@ -358,7 +358,7 @@ export const downloadReceipt = async (req, res) => {
 
     doc.font("Helvetica").fillColor("#6b7280").text("Area", col2X, currentY);
     doc.font("Helvetica-Bold").fillColor("#111827").text(`${p.builtUpArea} sq ft`, col2ValX, currentY);
-    
+
     currentY += 40;
 
     /* ---------------- TAX CALCULATION ---------------- */
@@ -378,7 +378,7 @@ export const downloadReceipt = async (req, res) => {
     drawCalcRow("Zone Multiplier", `x ${p.zoneMultiplier}`);
     drawCalcRow("Usage Multiplier", `x ${p.usageMultiplier}`);
     drawCalcRow("Age Factor", `x ${p.ageFactor}`);
-    
+
     currentY += 10;
 
     // Divider Line
@@ -413,9 +413,9 @@ export const downloadReceipt = async (req, res) => {
     /* ---------------- FOOTER ---------------- */
     const footerY = pageHeight - 60;
     doc.moveTo(margin, footerY).lineTo(pageWidth - margin, footerY).strokeColor("#e5e7eb").lineWidth(1).stroke();
-    
+
     doc.fontSize(8).fillColor("#9ca3af")
-       .text("This receipt is computer generated and valid without a physical signature.", 0, footerY + 10, { align: "center" });
+      .text("This receipt is computer generated and valid without a physical signature.", 0, footerY + 10, { align: "center" });
     doc.text("© 2025 Land Tax System | Secure Digital Records", 0, footerY + 22, { align: "center" });
 
     doc.end();
@@ -424,3 +424,86 @@ export const downloadReceipt = async (req, res) => {
     res.status(500).json({ error: "Server error generating receipt" });
   }
 };
+
+/* ---------------------- GET ALL PROPERTIES (ADMIN) ---------------------- */
+export const getAllPropertiesAdmin = async (req, res) => {
+  try {
+    const collection = await getPropertyCollection();
+    const { search = "", zone = "", status = "", page = 1, limit = 20 } = req.query;
+
+    const query = {};
+    if (search.trim()) {
+      const regex = new RegExp(search.trim(), "i");
+      query.$or = [{ ownerName: regex }, { address: regex }, { ownerPhone: regex }];
+    }
+    if (zone && zone !== "all") query.zone = { $regex: zone, $options: "i" };
+    if (status && status !== "all") query.paymentStatus = status;
+
+    const skip = (Number(page) - 1) * Number(limit);
+    const [properties, total] = await Promise.all([
+      collection.find(query).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)).toArray(),
+      collection.countDocuments(query),
+    ]);
+
+    res.json({ properties, total, page: Number(page), pages: Math.ceil(total / Number(limit)) });
+  } catch (err) {
+    console.error("Admin get all properties error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+/* ---------------------- PAY INSTALLMENT ---------------------- */
+export const payInstallment = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const propertyId = req.params.id;
+    const { amount } = req.body;
+
+    if (!amount || isNaN(amount) || Number(amount) <= 0) {
+      return res.status(400).json({ error: "Valid amount is required" });
+    }
+
+    const collection = await getPropertyCollection();
+    const property = await collection.findOne({
+      _id: new ObjectId(propertyId),
+      owner: new ObjectId(userId),
+    });
+
+    if (!property) return res.status(404).json({ error: "Property not found" });
+
+    const installmentEntry = {
+      amount: Number(amount),
+      paidAt: new Date(),
+    };
+
+    const existingInstallments = property.installments || [];
+    const amountPaid = existingInstallments.reduce((sum, i) => sum + i.amount, 0) + Number(amount);
+    const isFullyPaid = amountPaid >= property.finalTaxAmount;
+
+    const updateFields = {
+      $push: { installments: installmentEntry },
+      $set: {
+        amountPaid,
+        ...(isFullyPaid && {
+          paymentStatus: "paid",
+          paymentDate: new Date(),
+          receiptId: `RCPT-${Date.now()}`,
+        }),
+      },
+    };
+
+    await collection.updateOne({ _id: new ObjectId(propertyId) }, updateFields);
+
+    res.json({
+      message: isFullyPaid ? "Tax fully paid!" : "Installment recorded",
+      amountPaid,
+      remaining: Math.max(0, property.finalTaxAmount - amountPaid),
+      fullyPaid: isFullyPaid,
+    });
+  } catch (err) {
+    console.error("Pay installment error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+

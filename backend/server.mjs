@@ -7,6 +7,9 @@ import userRoutes from "./routes/userRoutes.mjs";
 import propertyRoutes from "./routes/propertyRoutes.mjs";
 import paymentRoutes from "./routes/paymentRoutes.mjs";
 import paymentHistoryRoutes from "./routes/paymentHistoryRoutes.mjs";
+import adminRoutes from "./routes/adminRoutes.mjs";
+import disputeRoutes from "./routes/disputeRoutes.mjs";
+import { startScheduler } from "./utils/scheduler.mjs";
 
 dotenv.config();
 
@@ -48,6 +51,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/properties", propertyRoutes);
 app.use("/api/pay-tax", paymentRoutes);
 app.use("/api/payments", paymentHistoryRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/disputes", disputeRoutes);
 
 /* =======================
    GLOBAL ERROR HANDLER
@@ -62,4 +67,5 @@ app.use((err, req, res, next) => {
 ======================= */
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  startScheduler();
 });

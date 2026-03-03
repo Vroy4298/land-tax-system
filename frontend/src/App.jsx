@@ -13,11 +13,17 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 
+// Admin pages (Phase 2)
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminProperties from "./pages/AdminProperties";
+import AdminUsers from "./pages/AdminUsers";
 
-
+// Phase 3/4 pages
+import MapView from "./pages/MapView";
+import Disputes from "./pages/Disputes";
 
 import ProtectedRoute from "./components/ProtectedRoute";
-
+import AdminRoute from "./components/AdminRoute";
 
 function App() {
   return (
@@ -34,60 +40,21 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
 
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/properties" element={<ProtectedRoute><PropertyList /></ProtectedRoute>} />
+          <Route path="/add-property" element={<ProtectedRoute><AddProperty /></ProtectedRoute>} />
+          <Route path="/properties/:id" element={<ProtectedRoute><PropertyDetails /></ProtectedRoute>} />
+          <Route path="/properties/:id/edit" element={<ProtectedRoute><EditProperty /></ProtectedRoute>} />
+          <Route path="/payment-history" element={<ProtectedRoute><PaymentHistory /></ProtectedRoute>} />
 
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
+          {/* Phase 3 */}
+          <Route path="/map" element={<ProtectedRoute><MapView /></ProtectedRoute>} />
+          <Route path="/disputes" element={<ProtectedRoute><Disputes /></ProtectedRoute>} />
 
-          <Route
-            path="/properties"
-            element={
-              <ProtectedRoute>
-                <PropertyList />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/add-property"
-            element={
-              <ProtectedRoute>
-                <AddProperty />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/properties/:id"
-            element={
-              <ProtectedRoute>
-                <PropertyDetails />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/properties/:id/edit"
-            element={
-              <ProtectedRoute>
-                <EditProperty />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/payment-history"
-            element={
-              <ProtectedRoute>
-                <PaymentHistory />
-              </ProtectedRoute>
-            }
-          />
+          {/* Admin routes — Phase 2 */}
+          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route path="/admin/properties" element={<AdminRoute><AdminProperties /></AdminRoute>} />
+          <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
         </Routes>
       </div>
     </>
