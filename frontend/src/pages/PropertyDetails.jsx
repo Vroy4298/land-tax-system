@@ -55,6 +55,8 @@ export default function PropertyDetails() {
   const [documents, setDocuments] = useState([]);
   const [docUploading, setDocUploading] = useState(false);
   const [docFile, setDocFile] = useState(null);
+  const [docError, setDocError] = useState("");
+
 
   // Installment state
   const [installAmt, setInstallAmt] = useState("");
@@ -188,19 +190,26 @@ export default function PropertyDetails() {
     e.preventDefault();
     if (!docFile) return;
     setDocUploading(true);
+    setDocError("");
     const formData = new FormData();
     formData.append("file", docFile);
     const BASE_URL = import.meta.env.VITE_API_URL;
     const token = getAuthToken();
-    const res = await fetch(`${BASE_URL}/api/properties/${id}/documents`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body: formData,
-    });
-    if (res.ok) {
+    try {
+      const res = await fetch(`${BASE_URL}/api/properties/${id}/documents`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
       const data = await res.json();
-      setDocuments((prev) => [...prev, data.document]);
-      setDocFile(null);
+      if (res.ok) {
+        setDocuments((prev) => [...prev, data.document]);
+        setDocFile(null);
+      } else {
+        setDocError(data.error || "Upload failed — check Cloudinary credentials on Render");
+      }
+    } catch (err) {
+      setDocError("Network error — is the backend running?");
     }
     setDocUploading(false);
   };
@@ -426,8 +435,8 @@ export default function PropertyDetails() {
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-slate-400">Status</span>
                     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${property.paymentStatus === "paid"
-                        ? "bg-emerald-500/10 text-emerald-400"
-                        : "bg-amber-500/10 text-amber-400"
+                      ? "bg-emerald-500/10 text-emerald-400"
+                      : "bg-amber-500/10 text-amber-400"
                       }`}>
                       <div className={`w-1.5 h-1.5 rounded-full ${property.paymentStatus === 'paid' ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`}></div>
                       {property.paymentStatus.charAt(0).toUpperCase() + property.paymentStatus.slice(1)}
@@ -503,6 +512,11 @@ export default function PropertyDetails() {
               {docUploading ? "Uploading…" : "Upload"}
             </button>
           </form>
+          {docError && (
+            <p className="text-sm text-red-500 dark:text-red-400 mb-3 flex items-center gap-1.5">
+              ⚠️ {docError}
+            </p>
+          )}
 
           {/* Documents List */}
           {documents.length === 0 ? (
