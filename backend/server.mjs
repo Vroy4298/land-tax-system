@@ -21,13 +21,30 @@ const PORT = process.env.PORT || 5000;
 ======================= */
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://land-tax-system-g2c5.vercel.app",
-      "https://land-tax-system-two.vercel.app",
-    ],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, curl, Postman)
+      if (!origin) return callback(null, true);
+
+      const allowed = [
+        "http://localhost:5173",
+        "https://land-tax-system-g2c5.vercel.app",
+        "https://land-tax-system-two.vercel.app",
+      ];
+
+      // Also allow any Vercel preview URL for this project
+      const isVercelPreview =
+        origin.includes("land-tax-system") && origin.endsWith(".vercel.app");
+
+      if (allowed.includes(origin) || isVercelPreview) {
+        callback(null, true);
+      } else {
+        console.warn("CORS blocked origin:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   })
 );
 
