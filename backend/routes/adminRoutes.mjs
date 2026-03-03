@@ -7,12 +7,15 @@ import { getAllPropertiesAdmin } from "../controllers/propertyController.mjs";
 
 const router = express.Router();
 
-// All admin routes require auth + admin role
+// ⚙️ Seed route — only requires login (no admin check)
+// This allows the first admin to be promoted
+router.post("/make-admin", authMiddleware, makeAdmin);
+
+// All routes below require auth + admin role
 router.use(authMiddleware, adminMiddleware);
 
 router.get("/stats", getStats);
 router.get("/properties", getAllPropertiesAdmin);
 router.get("/users", getAllUsers);
-router.post("/make-admin", makeAdmin);
 
 export default router;
