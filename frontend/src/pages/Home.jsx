@@ -38,8 +38,8 @@ const pathDraw = {
 
 const navbarVariant = {
   hidden: { y: -100, opacity: 0 },
-  visible: { 
-    y: 0, 
+  visible: {
+    y: 0,
     opacity: 1,
     transition: { duration: 0.8, ease: "circOut" }
   }
@@ -47,7 +47,7 @@ const navbarVariant = {
 const token = getAuthToken();
 
 export default function Home() {
-   const token = getAuthToken();
+  const token = getAuthToken();
 
   // 🔐 If user already logged in → go to dashboard
   if (token) {
@@ -55,9 +55,9 @@ export default function Home() {
   }
   return (
     <div className="min-h-screen bg-[#020617] text-white font-sans overflow-x-hidden selection:bg-blue-500/30">
-      
+
       {/* ================= NAVBAR ================= */}
-      <motion.nav 
+      <motion.nav
         variants={navbarVariant}
         initial="hidden"
         animate="visible"
@@ -80,8 +80,8 @@ export default function Home() {
           {/* Desktop Nav Links */}
           <div className="hidden md:flex items-center gap-8">
             {['Features', 'How it Works', 'Pricing'].map((item) => (
-              <a 
-                key={item} 
+              <a
+                key={item}
                 href="#"
                 className="text-sm font-medium text-slate-400 hover:text-white transition-colors relative group py-2"
               >
@@ -93,14 +93,14 @@ export default function Home() {
 
           {/* Auth Buttons */}
           <div className="flex items-center gap-4">
-            <Link 
-              to="/login" 
+            <Link
+              to="/login"
               className="hidden sm:block text-sm font-semibold text-slate-300 hover:text-white transition-colors hover:shadow-[0_0_15px_rgba(255,255,255,0.1)] px-4 py-2 rounded-lg"
             >
               Log In
             </Link>
-            <Link 
-              to="/register" 
+            <Link
+              to="/register"
               className="group relative px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold shadow-[0_0_20px_-5px_rgba(37,99,235,0.5)] transition-all hover:scale-105 active:scale-95 overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
@@ -115,7 +115,7 @@ export default function Home() {
 
       {/* ================= HERO SECTION ================= */}
       <section className="relative pt-32 pb-32 lg:pt-48 lg:pb-48 px-6 overflow-hidden">
-        
+
         {/* Ambient Background Lighting */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] animate-pulse"></div>
@@ -125,9 +125,9 @@ export default function Home() {
         </div>
 
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
-          
+
           {/* LEFT: TEXT CONTENT */}
-          <motion.div 
+          <motion.div
             initial="hidden"
             animate="visible"
             variants={fadeInUp}
@@ -137,14 +137,14 @@ export default function Home() {
               <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping"></span>
               Next Gen Platform
             </div>
-            
+
             <h1 className="text-5xl lg:text-7xl font-extrabold leading-tight tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white via-blue-100 to-slate-500">
               Online Property Records <br />
               and <span className="text-blue-500 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">Land Tax Management</span>
             </h1>
 
             <p className="text-lg text-slate-400 mb-10 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-              Navigate the complexities of property taxes with an intelligent, 
+              Navigate the complexities of property taxes with an intelligent,
               automated system designed for the modern era. Secure, fast, and completely digital.
             </p>
 
@@ -154,11 +154,11 @@ export default function Home() {
                 className="group relative px-8 py-4 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold text-lg transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_-10px_rgba(37,99,235,0.5)]"
               >
                 <span className="relative z-10 flex items-center gap-2">
-                  Get Started Now <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform"/>
+                  Get Started Now <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                 </span>
                 <div className="absolute inset-0 rounded-xl ring-2 ring-white/20 group-hover:ring-white/40 transition-all"></div>
               </Link>
-              
+
               <Link
                 to="/register"
                 className="px-8 py-4 rounded-xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700 text-slate-300 font-semibold text-lg backdrop-blur-md transition-all flex items-center justify-center hover:text-white"
@@ -182,7 +182,7 @@ export default function Home() {
                 className="w-full rounded-xl shadow-inner bg-slate-950/50"
               />
               {/* Floating Badge */}
-              <motion.div 
+              <motion.div
                 animate={{ y: [0, -10, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                 className="absolute -bottom-6 -left-6 bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-xl flex items-center gap-3"
@@ -196,18 +196,43 @@ export default function Home() {
                 </div>
               </motion.div>
             </div>
-            
+
             {/* Glow Behind */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-blue-600/20 blur-[100px] -z-10"></div>
           </motion.div>
         </div>
       </section>
 
+      {/* ================= STATS BANNER ================= */}
+      <section className="relative py-12 border-y border-white/5">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/10 via-slate-900/50 to-indigo-900/10 pointer-events-none" />
+        <div className="max-w-5xl mx-auto px-6 relative">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {[
+              { value: "12,000+", label: "Properties Managed" },
+              { value: "500+", label: "Municipalities Covered" },
+              { value: "99.9%", label: "System Uptime" },
+              { value: "₹2.4Cr+", label: "Tax Collected" },
+            ].map((stat, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1, duration: 0.5 }}
+                className="text-center"
+              >
+                <p className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">{stat.value}</p>
+                <p className="text-sm text-slate-400 mt-1 font-medium">{stat.label}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-      {/* ================= SNAKE SCROLL SECTION ================= */}
       <section className="relative py-20 overflow-hidden">
         <div className="max-w-6xl mx-auto px-6 relative">
-          
+
           <div className="text-center mb-32">
             <h2 className="text-3xl md:text-5xl font-bold mb-6 text-white">
               How the System <span className="text-blue-500">Works</span>
@@ -219,13 +244,13 @@ export default function Home() {
 
           {/* --- STEP 1: LEFT --- */}
           <div className="relative grid grid-cols-1 md:grid-cols-2 gap-12 mb-0 items-center">
-            <motion.div 
+            <motion.div
               initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeInUp}
               className="order-2 md:order-1 relative z-10"
             >
-              <FeatureCard 
-                number="01" 
-                title="Account Creation" 
+              <FeatureCard
+                number="01"
+                title="Account Creation"
                 desc="Register securely using your email. We verify every user to ensure the integrity of the land record system."
                 icon={<Lock size={32} />}
               />
@@ -238,8 +263,8 @@ export default function Home() {
           {/* CONNECTOR 1 (Left to Right) */}
           <div className="hidden md:block h-32 w-full relative -my-4 pointer-events-none">
             <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
-              <motion.path 
-                d="M 25% 0 C 25% 50, 75% 50, 75% 100" 
+              <motion.path
+                d="M 25% 0 C 25% 50, 75% 50, 75% 100"
                 fill="none" stroke="#3b82f6" strokeWidth="3" strokeDasharray="8 8"
                 variants={pathDraw} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }}
                 style={{ filter: "drop-shadow(0 0 8px #3b82f6)" }}
@@ -250,15 +275,15 @@ export default function Home() {
           {/* --- STEP 2: RIGHT --- */}
           <div className="relative grid grid-cols-1 md:grid-cols-2 gap-12 mb-0 items-center">
             <div className="hidden md:flex justify-center items-center relative">
-               <div className="w-64 h-64 bg-indigo-900/20 rounded-full blur-3xl absolute"></div>
+              <div className="w-64 h-64 bg-indigo-900/20 rounded-full blur-3xl absolute"></div>
             </div>
-            <motion.div 
+            <motion.div
               initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeInUp}
               className="relative z-10"
             >
-              <FeatureCard 
-                number="02" 
-                title="Property Integration" 
+              <FeatureCard
+                number="02"
+                title="Property Integration"
                 desc="Add your land details. Our system integrates with geolocation data to visualize your plots instantly."
                 icon={<Globe size={32} />}
                 align="right"
@@ -269,8 +294,8 @@ export default function Home() {
           {/* CONNECTOR 2 (Right to Left) */}
           <div className="hidden md:block h-32 w-full relative -my-4 pointer-events-none">
             <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
-              <motion.path 
-                d="M 75% 0 C 75% 50, 25% 50, 25% 100" 
+              <motion.path
+                d="M 75% 0 C 75% 50, 25% 50, 25% 100"
                 fill="none" stroke="#3b82f6" strokeWidth="3" strokeDasharray="8 8"
                 variants={pathDraw} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }}
                 style={{ filter: "drop-shadow(0 0 8px #3b82f6)" }}
@@ -280,13 +305,13 @@ export default function Home() {
 
           {/* --- STEP 3: LEFT --- */}
           <div className="relative grid grid-cols-1 md:grid-cols-2 gap-12 mb-0 items-center">
-            <motion.div 
+            <motion.div
               initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeInUp}
               className="order-2 md:order-1 relative z-10"
             >
-              <FeatureCard 
-                number="03" 
-                title="AI Tax Calculation" 
+              <FeatureCard
+                number="03"
+                title="AI Tax Calculation"
                 desc="Our algorithms automatically calculate your tax liability based on zoning, area, and current market rates."
                 icon={<Calculator size={32} />}
               />
@@ -297,8 +322,8 @@ export default function Home() {
           {/* CONNECTOR 3 (Left to Right) */}
           <div className="hidden md:block h-32 w-full relative -my-4 pointer-events-none">
             <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
-              <motion.path 
-                d="M 25% 0 C 25% 50, 75% 50, 75% 100" 
+              <motion.path
+                d="M 25% 0 C 25% 50, 75% 50, 75% 100"
                 fill="none" stroke="#3b82f6" strokeWidth="3" strokeDasharray="8 8"
                 variants={pathDraw} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }}
                 style={{ filter: "drop-shadow(0 0 8px #3b82f6)" }}
@@ -306,16 +331,16 @@ export default function Home() {
             </svg>
           </div>
 
-           {/* --- STEP 4: RIGHT --- */}
-           <div className="relative grid grid-cols-1 md:grid-cols-2 gap-12 mb-0 items-center">
+          {/* --- STEP 4: RIGHT --- */}
+          <div className="relative grid grid-cols-1 md:grid-cols-2 gap-12 mb-0 items-center">
             <div className="hidden md:flex justify-center items-center relative"></div>
-            <motion.div 
+            <motion.div
               initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeInUp}
               className="relative z-10"
             >
-              <FeatureCard 
-                number="04" 
-                title="Secure Payment" 
+              <FeatureCard
+                number="04"
+                title="Secure Payment"
                 desc="Pay directly through the portal using encrypted gateways. We support all major cards and net banking."
                 icon={<Zap size={32} />}
                 align="right"
@@ -326,8 +351,8 @@ export default function Home() {
           {/* CONNECTOR 4 (Right to Left) */}
           <div className="hidden md:block h-32 w-full relative -my-4 pointer-events-none">
             <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
-              <motion.path 
-                d="M 75% 0 C 75% 50, 25% 50, 25% 100" 
+              <motion.path
+                d="M 75% 0 C 75% 50, 25% 50, 25% 100"
                 fill="none" stroke="#3b82f6" strokeWidth="3" strokeDasharray="8 8"
                 variants={pathDraw} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }}
                 style={{ filter: "drop-shadow(0 0 8px #3b82f6)" }}
@@ -335,15 +360,15 @@ export default function Home() {
             </svg>
           </div>
 
-           {/* --- STEP 5: LEFT --- */}
-           <div className="relative grid grid-cols-1 md:grid-cols-2 gap-12 mb-0 items-center">
-            <motion.div 
+          {/* --- STEP 5: LEFT --- */}
+          <div className="relative grid grid-cols-1 md:grid-cols-2 gap-12 mb-0 items-center">
+            <motion.div
               initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeInUp}
               className="order-2 md:order-1 relative z-10"
             >
-              <FeatureCard 
-                number="05" 
-                title="Digital Records" 
+              <FeatureCard
+                number="05"
+                title="Digital Records"
                 desc="Instantly receive a digitally signed receipt. Your payment history is stored permanently on the cloud."
                 icon={<Database size={32} />}
               />
@@ -359,46 +384,87 @@ export default function Home() {
 
       {/* ================= CTA SECTION ================= */}
       <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-blue-900/10"></div>
+        <div className="absolute inset-0">
+          <div className="absolute top-0 left-1/4 w-[400px] h-[300px] bg-blue-600/10 rounded-full blur-[80px]" />
+          <div className="absolute bottom-0 right-1/4 w-[400px] h-[300px] bg-indigo-600/10 rounded-full blur-[80px]" />
+        </div>
         <div className="max-w-4xl mx-auto px-6 relative z-10 text-center">
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
+            initial={{ scale: 0.95, opacity: 0 }}
             whileInView={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="bg-gradient-to-r from-slate-900 to-slate-800 border border-slate-700 p-12 rounded-3xl shadow-2xl"
+            className="relative bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 p-12 rounded-3xl shadow-2xl overflow-hidden"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">Ready to Digitalize?</h2>
-            <p className="text-slate-400 mb-8 text-lg">
-              Join thousands of property owners who have switched to the smart way of managing land tax.
-            </p>
-            <Link
-              to="/register"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-blue-900 rounded-xl font-bold hover:bg-blue-50 transition-colors"
-            >
-              Create Free Account <ArrowRight size={20} />
-            </Link>
+            <div className="absolute inset-0 rounded-3xl" style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.1) 0%, transparent 60%)' }} />
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent" />
+            <div className="relative z-10">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-900/40 border border-blue-700/50 text-blue-400 text-xs font-bold uppercase tracking-widest mb-6">
+                <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping" />
+                Get Started Today
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">Ready to Digitalize?</h2>
+              <p className="text-slate-400 mb-8 text-lg max-w-xl mx-auto">
+                Join thousands of property owners who have switched to the smart way of managing land tax.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link
+                  to="/register"
+                  className="inline-flex items-center gap-2 px-8 py-4 bg-white text-blue-900 rounded-xl font-bold hover:bg-blue-50 transition-all hover:scale-105 active:scale-95 shadow-xl"
+                >
+                  Create Free Account <ArrowRight size={20} />
+                </Link>
+                <Link
+                  to="/login"
+                  className="inline-flex items-center gap-2 px-8 py-4 bg-slate-700/50 text-white rounded-xl font-semibold hover:bg-slate-700 transition-all border border-slate-600"
+                >
+                  Already a member? Sign in
+                </Link>
+              </div>
+            </div>
           </motion.div>
         </div>
       </section>
 
       {/* ================= FOOTER ================= */}
-      <footer className="bg-[#020617] border-t border-slate-800 py-12 relative z-10">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-blue-600 rounded-lg text-white">
-              <Building2 size={20} />
+      <footer className="bg-[#020617] border-t border-slate-800 py-10 relative z-10">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-8">
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="p-1.5 bg-blue-600 rounded-lg text-white">
+                  <Building2 size={18} />
+                </div>
+                <span className="font-bold text-lg text-white">LandTax</span>
+              </div>
+              <p className="text-sm text-slate-500 max-w-xs leading-relaxed">
+                Modernizing land tax management for the digital era. Secure, transparent, and efficient.
+              </p>
             </div>
-            <span className="font-bold text-lg text-white">LandTax</span>
+            <div className="flex gap-12 text-sm">
+              <div className="space-y-3">
+                <p className="font-semibold text-slate-300 uppercase tracking-widest text-xs">Platform</p>
+                <div className="space-y-2">
+                  <Link to="/login" className="block text-slate-500 hover:text-blue-400 transition-colors">Login</Link>
+                  <Link to="/register" className="block text-slate-500 hover:text-blue-400 transition-colors">Register</Link>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <p className="font-semibold text-slate-300 uppercase tracking-widest text-xs">Company</p>
+                <div className="space-y-2">
+                  <Link to="/" className="block text-slate-500 hover:text-blue-400 transition-colors">Home</Link>
+                  <a href="#" className="block text-slate-500 hover:text-blue-400 transition-colors">Features</a>
+                </div>
+              </div>
+            </div>
           </div>
-          
-          <p className="text-sm text-slate-500">
-            © {new Date().getFullYear()} LandTax System. All rights reserved.
-          </p>
-
-          <div className="flex gap-8 text-sm font-medium text-slate-400">
-            <Link to="/" className="hover:text-blue-400 transition-colors">Home</Link>
-            <Link to="/login" className="hover:text-blue-400 transition-colors">Login</Link>
-            <Link to="/register" className="hover:text-blue-400 transition-colors">Register</Link>
+          <div className="pt-6 border-t border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-slate-600">
+              © {new Date().getFullYear()} LandTax System. All rights reserved.
+            </p>
+            <div className="flex gap-6 text-sm text-slate-600">
+              <a href="#" className="hover:text-blue-400 transition-colors">Privacy Policy</a>
+              <a href="#" className="hover:text-blue-400 transition-colors">Terms of Service</a>
+            </div>
           </div>
         </div>
       </footer>
@@ -409,9 +475,9 @@ export default function Home() {
 /* ================= COMPONENT: FEATURE CARD ================= */
 function FeatureCard({ number, title, desc, icon, align = "left" }) {
   const isRight = align === "right";
-  
+
   return (
-    <motion.div 
+    <motion.div
       whileHover={{ scale: 1.02 }}
       className={`relative p-8 rounded-3xl bg-slate-900/80 border border-slate-800 backdrop-blur-sm shadow-xl ${isRight ? 'ml-auto' : 'mr-auto'} max-w-lg`}
     >
@@ -431,7 +497,7 @@ function FeatureCard({ number, title, desc, icon, align = "left" }) {
           </p>
         </div>
       </div>
-      
+
       {/* Card Decoration */}
       <div className="absolute bottom-0 right-0 p-6 opacity-5 pointer-events-none">
         {icon}

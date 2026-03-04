@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Eye, 
-  Edit2, 
-  Trash2, 
-  MapPin, 
-  Layers, 
-  Home, 
+import {
+  Eye,
+  Edit2,
+  Trash2,
+  MapPin,
+  Layers,
+  Home,
   MoreHorizontal,
   Search,
   Filter,
@@ -33,11 +33,20 @@ const rowVariants = {
 /* ---------------- FORMATTERS ---------------- */
 const formatUsage = (u) =>
   u === "self" ? "Self-Occupied" :
-  u === "rented" ? "Rented" :
-  u;
+    u === "rented" ? "Rented" :
+      u;
 
 const formatType = (t) =>
   t?.charAt(0).toUpperCase() + t?.slice(1);
+
+const getTypeBadgeClass = (type) => {
+  const t = (type || "").toLowerCase();
+  if (t === "residential") return "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-800";
+  if (t === "commercial") return "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border-purple-100 dark:border-purple-800";
+  if (t === "industrial") return "bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border-orange-100 dark:border-orange-800";
+  if (t === "agricultural") return "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800";
+  return "bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700";
+};
 
 export default function PropertyList() {
   const [properties, setProperties] = useState([]);
@@ -112,13 +121,13 @@ export default function PropertyList() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0b1220] font-sans transition-colors duration-300">
-      
+
       {/* 
         Container with padding-top: 32 (8rem/128px) to explicitly clear fixed navbar.
         Padding is applied here to avoid conflicts with other utility classes.
       */}
       <div className="max-w-7xl mx-auto px-6 md:px-8 pt-32 pb-12 space-y-8">
-        
+
         {/* HEADER SECTION */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 animate-in fade-in slide-in-from-top-4 duration-500">
           <div>
@@ -132,18 +141,18 @@ export default function PropertyList() {
 
           {properties.length > 0 && (
             <div className="flex items-center gap-4">
-               {/* Search Bar */}
-               <div className="relative hidden md:block group">
+              {/* Search Bar */}
+              <div className="relative hidden md:block group">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
-                <input 
-                  type="text" 
-                  placeholder="Search..." 
+                <input
+                  type="text"
+                  placeholder="Search..."
                   className="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none shadow-sm transition-all w-64 text-slate-700 dark:text-slate-200 placeholder:text-slate-400"
                 />
               </div>
 
               {/* Add Button */}
-              <Link 
+              <Link
                 to="/add-property"
                 className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold shadow-lg shadow-blue-600/25 transition-all hover:scale-105 active:scale-95"
               >
@@ -168,7 +177,7 @@ export default function PropertyList() {
 
         {/* DATA TABLE */}
         {properties.length > 0 && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
@@ -202,7 +211,7 @@ export default function PropertyList() {
                   </tr>
                 </thead>
 
-                <motion.tbody 
+                <motion.tbody
                   variants={containerVariants}
                   initial="hidden"
                   animate="visible"
@@ -210,8 +219,8 @@ export default function PropertyList() {
                 >
                   <AnimatePresence>
                     {properties.map((p) => (
-                      <motion.tr 
-                        key={p._id} 
+                      <motion.tr
+                        key={p._id}
                         variants={rowVariants}
                         exit="exit"
                         className="group hover:bg-blue-50/50 dark:hover:bg-slate-800/60 transition-colors duration-200"
@@ -236,14 +245,13 @@ export default function PropertyList() {
 
                         {/* Property Details */}
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex flex-col gap-1.5">
-                            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-                              <Home size={14} className="text-slate-400" />
-                              {p.builtUpArea} <span className="text-xs text-slate-500">sq ft</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                              <Layers size={14} className="text-slate-400" />
-                              {p.usageType}
+                          <div className="flex flex-col gap-2">
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold border ${getTypeBadgeClass(p.propertyType)} uppercase tracking-wide`}>
+                              {formatType(p.propertyType) || 'Residential'}
+                            </span>
+                            <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300">
+                              <Home size={13} className="text-slate-400" />
+                              {p.builtUpArea} <span className="text-slate-400">sq ft</span>
                             </div>
                           </div>
                         </td>
@@ -280,16 +288,16 @@ export default function PropertyList() {
 
                         {/* Actions */}
                         <td className="px-6 py-4 whitespace-nowrap text-right">
-                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          <div className="flex items-center justify-end gap-1">
                             <Link to={`/properties/${p._id}`}>
                               <button className="p-2 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all" title="View Details">
-                                <Eye size={18} />
+                                <Eye size={16} />
                               </button>
                             </Link>
 
                             <Link to={`/properties/${p._id}/edit`}>
                               <button className="p-2 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all" title="Edit Property">
-                                <Edit2 size={18} />
+                                <Edit2 size={16} />
                               </button>
                             </Link>
 
@@ -302,13 +310,9 @@ export default function PropertyList() {
                               {deleting === p._id ? (
                                 <span className="h-4 w-4 block rounded-full border-2 border-slate-400 border-t-transparent animate-spin" />
                               ) : (
-                                <Trash2 size={18} />
+                                <Trash2 size={16} />
                               )}
                             </button>
-                          </div>
-                          {/* Mobile fallback for actions */}
-                          <div className="sm:hidden flex items-center justify-end">
-                            <MoreHorizontal size={20} className="text-slate-400" />
                           </div>
                         </td>
                       </motion.tr>
@@ -317,7 +321,7 @@ export default function PropertyList() {
                 </motion.tbody>
               </table>
             </div>
-            
+
             {/* Pagination / Footer Placeholder */}
             <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex justify-end">
               <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
