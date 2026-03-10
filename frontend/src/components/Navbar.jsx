@@ -1,15 +1,19 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
-import { Sun, Moon, ChevronDown, ShieldCheck, Map, AlertCircle, Menu, X, Building2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { Sun, Moon, User, LogOut, Menu, X, Building2, ShieldCheck, Languages } from "lucide-react";
 import { getAuthToken, isAdmin } from "../utils/auth";
 
 export default function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [adminUser, setAdminUser] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState(null);
   const adminRef = useRef(null);
+  const { t, i18n } = useTranslation();
 
   const [dark, setDark] = useState(
     document.documentElement.classList.contains("dark")
@@ -20,6 +24,7 @@ export default function Navbar() {
     setIsLoggedIn(!!token);
     setAdminUser(!!token && isAdmin());
     setMobileOpen(false); // close mobile menu on route change
+    setAvatarUrl(localStorage.getItem("userAvatar"));
   }, [location.pathname]);
 
   // Close admin dropdown on outside click
@@ -36,7 +41,7 @@ export default function Navbar() {
   const logout = () => {
     localStorage.clear();
     sessionStorage.clear();
-    window.location.href = "/";
+    navigate("/");
   };
 
   const toggleTheme = () => {
@@ -81,77 +86,69 @@ export default function Navbar() {
             to={isLoggedIn ? "/dashboard" : "/"}
             className={navLinkClass(isActive("/") || isActive("/dashboard"))}
           >
-            Home
+            {t("Home")}
             <span className={navIndicator(isActive("/") || isActive("/dashboard"))} />
           </Link>
 
-          {isLoggedIn && (
+          {isLoggedIn && !adminUser && (
             <>
               <Link to="/dashboard" className={navLinkClass(isActive("/dashboard"))}>
-                Dashboard
+                {t("Dashboard")}
                 <span className={navIndicator(isActive("/dashboard"))} />
               </Link>
               <Link to="/properties" className={navLinkClass(isActivePre("/properties"))}>
-                Properties
+                {t("Properties")}
                 <span className={navIndicator(isActivePre("/properties"))} />
               </Link>
               <Link to="/add-property" className={navLinkClass(isActive("/add-property"))}>
-                Add Property
+                {t("Add Property")}
                 <span className={navIndicator(isActive("/add-property"))} />
               </Link>
               <Link to="/payment-history" className={navLinkClass(isActive("/payment-history"))}>
-                History
+                {t("History")}
                 <span className={navIndicator(isActive("/payment-history"))} />
               </Link>
               <Link to="/map" className={`flex items-center gap-1 ${navLinkClass(isActive("/map"))}`}>
-                <Map size={14} /> Map
+                <Map size={14} /> {t("Map")}
                 <span className={navIndicator(isActive("/map"))} />
               </Link>
               <Link to="/disputes" className={`flex items-center gap-1 ${navLinkClass(isActive("/disputes"))}`}>
-                <AlertCircle size={14} /> Disputes
+                <AlertCircle size={14} /> {t("Disputes")}
                 <span className={navIndicator(isActive("/disputes"))} />
               </Link>
+            </>
+          )}
 
-              {/* ADMIN DROPDOWN */}
-              {adminUser && (
-                <div className="relative" ref={adminRef}>
-                  <button
-                    onClick={() => setAdminOpen(!adminOpen)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-500 transition-colors shadow-md shadow-blue-600/20"
-                  >
-                    <ShieldCheck size={14} /> Admin
-                    <ChevronDown size={12} className={`transition-transform duration-200 ${adminOpen ? "rotate-180" : ""}`} />
-                  </button>
-                  {adminOpen && (
-                    <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                      {[
-                        { to: "/admin", label: "Analytics" },
-                        { to: "/admin/properties", label: "All Properties" },
-                        { to: "/admin/users", label: "All Users" },
-                      ].map(({ to, label }) => (
-                        <Link
-                          key={to} to={to}
-                          onClick={() => setAdminOpen(false)}
-                          className={`block px-4 py-2.5 text-sm transition-colors ${isActive(to) ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-semibold" : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}
-                        >
-                          {label}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+          {/* ADMIN NAV LINKS */}
+          {adminUser && (
+            <>
+              <Link to="/admin" className={navLinkClass(isActive("/admin"))}>
+                {t("Analytics")}
+                <span className={navIndicator(isActive("/admin"))} />
+              </Link>
+              <Link to="/admin/properties" className={navLinkClass(isActivePre("/admin/properties"))}>
+                {t("All Properties")}
+                <span className={navIndicator(isActivePre("/admin/properties"))} />
+              </Link>
+              <Link to="/admin/users" className={navLinkClass(isActivePre("/admin/users"))}>
+                {t("All Users")}
+                <span className={navIndicator(isActivePre("/admin/users"))} />
+              </Link>
+              <Link to="/disputes" className={`flex items-center gap-1 ${navLinkClass(isActive("/disputes"))}`}>
+                <AlertCircle size={14} /> {t("All Disputes")}
+                <span className={navIndicator(isActive("/disputes"))} />
+              </Link>
             </>
           )}
 
           {!isLoggedIn && (
             <>
               <Link to="/login" className={navLinkClass(isActive("/login"))}>
-                Login
+                {t("Login")}
                 <span className={navIndicator(isActive("/login"))} />
               </Link>
               <Link to="/register" className={navLinkClass(isActive("/register"))}>
-                Register
+                {t("Register")}
                 <span className={navIndicator(isActive("/register"))} />
               </Link>
             </>
@@ -160,6 +157,22 @@ export default function Navbar() {
 
         {/* RIGHT ACTIONS */}
         <div className="flex items-center gap-3 shrink-0">
+          <div className="relative group hidden sm:flex items-center">
+            <Languages size={18} className="text-slate-400 absolute left-2 pointer-events-none" />
+            <select
+              value={i18n.language}
+              onChange={(e) => i18n.changeLanguage(e.target.value)}
+              className="pl-8 pr-2 py-1.5 text-xs font-semibold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg outline-none appearance-none hover:border-blue-500 cursor-pointer transition-colors"
+            >
+              <option value="en">English</option>
+              <option value="hi">हिंदी (Hindi)</option>
+              <option value="bn">বাংলা (Bengali)</option>
+              <option value="mr">मराठी (Marathi)</option>
+              <option value="te">తెలుగు (Telugu)</option>
+              <option value="ta">தமிழ் (Tamil)</option>
+            </select>
+          </div>
+
           <button
             onClick={toggleTheme}
             className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
@@ -172,12 +185,18 @@ export default function Navbar() {
             )}
           </button>
 
+          {isLoggedIn && avatarUrl && (
+            <Link to="/dashboard" className="hidden sm:block h-9 w-9 rounded-full overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm hover:ring-2 hover:ring-blue-500 transition-all focus:outline-none">
+              <img src={avatarUrl} alt="User Avatar" className="w-full h-full object-cover" />
+            </Link>
+          )}
+
           {isLoggedIn && (
             <button
               onClick={logout}
               className="hidden sm:block text-sm font-semibold px-4 py-2 rounded-lg bg-red-50 dark:bg-red-900/10 text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors"
             >
-              Logout
+              {t("Logout")}
             </button>
           )}
 
@@ -195,18 +214,19 @@ export default function Navbar() {
       {mobileOpen && (
         <div className="md:hidden border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-[#0b1220] px-6 py-4 space-y-1 animate-in slide-in-from-top-4 duration-200">
           {[
-            { to: isLoggedIn ? "/dashboard" : "/", label: "Home", show: true },
-            { to: "/dashboard", label: "Dashboard", show: isLoggedIn },
-            { to: "/properties", label: "Properties", show: isLoggedIn },
-            { to: "/add-property", label: "Add Property", show: isLoggedIn },
-            { to: "/payment-history", label: "Payment History", show: isLoggedIn },
-            { to: "/map", label: "Map View", show: isLoggedIn },
-            { to: "/disputes", label: "Disputes", show: isLoggedIn },
-            { to: "/admin", label: "Admin Analytics", show: adminUser },
-            { to: "/admin/properties", label: "All Properties (Admin)", show: adminUser },
-            { to: "/admin/users", label: "All Users (Admin)", show: adminUser },
-            { to: "/login", label: "Login", show: !isLoggedIn },
-            { to: "/register", label: "Register", show: !isLoggedIn },
+            { to: isLoggedIn && !adminUser ? "/dashboard" : isLoggedIn && adminUser ? "/admin" : "/", label: t("Home"), show: true },
+            { to: "/dashboard", label: t("Dashboard"), show: isLoggedIn && !adminUser },
+            { to: "/properties", label: t("Properties"), show: isLoggedIn && !adminUser },
+            { to: "/add-property", label: t("Add Property"), show: isLoggedIn && !adminUser },
+            { to: "/payment-history", label: t("Payment History"), show: isLoggedIn && !adminUser },
+            { to: "/map", label: t("Map View"), show: isLoggedIn && !adminUser },
+            { to: "/disputes", label: t("Disputes"), show: isLoggedIn && !adminUser },
+            { to: "/admin", label: t("Analytics"), show: adminUser },
+            { to: "/admin/properties", label: t("All Properties"), show: adminUser },
+            { to: "/admin/users", label: t("All Users"), show: adminUser },
+            { to: "/disputes", label: t("All Disputes"), show: adminUser },
+            { to: "/login", label: t("Login"), show: !isLoggedIn },
+            { to: "/register", label: t("Register"), show: !isLoggedIn },
           ]
             .filter((item) => item.show)
             .map(({ to, label }) => (
@@ -215,8 +235,8 @@ export default function Navbar() {
                 to={to}
                 onClick={() => setMobileOpen(false)}
                 className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${location.pathname === to
-                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-semibold"
-                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-semibold"
+                  : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                   }`}
               >
                 {label}
@@ -228,7 +248,7 @@ export default function Navbar() {
               onClick={logout}
               className="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors mt-2"
             >
-              Logout
+              {t("Logout")}
             </button>
           )}
         </div>

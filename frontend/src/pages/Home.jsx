@@ -79,13 +79,21 @@ export default function Home() {
 
           {/* Desktop Nav Links */}
           <div className="hidden md:flex items-center gap-8">
-            {['Features', 'How it Works', 'Pricing'].map((item) => (
+            {[
+              { label: 'Features', id: 'features' },
+              { label: 'How it Works', id: 'how-it-works' },
+              { label: 'Pricing', id: 'pricing' },
+            ].map(({ label, id }) => (
               <a
-                key={item}
-                href="#"
+                key={id}
+                href={`#${id}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+                }}
                 className="text-sm font-medium text-slate-400 hover:text-white transition-colors relative group py-2"
               >
-                {item}
+                {label}
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 group-hover:w-full transition-all duration-300 shadow-[0_0_10px_rgba(59,130,246,0.8)]"></span>
               </a>
             ))}
@@ -203,8 +211,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ================= STATS BANNER ================= */}
-      <section className="relative py-12 border-y border-white/5">
+      {/* ================= STATS BANNER / FEATURES ================= */}
+      <section id="features" className="relative py-12 border-y border-white/5">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-900/10 via-slate-900/50 to-indigo-900/10 pointer-events-none" />
         <div className="max-w-5xl mx-auto px-6 relative">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
@@ -230,7 +238,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="relative py-20 overflow-hidden">
+      <section id="how-it-works" className="relative py-20 overflow-hidden">
         <div className="max-w-6xl mx-auto px-6 relative">
 
           <div className="text-center mb-32">
@@ -379,6 +387,88 @@ export default function Home() {
           {/* Final Glow */}
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-64 bg-gradient-to-t from-blue-600/10 to-transparent pointer-events-none"></div>
 
+        </div>
+      </section>
+
+      {/* ================= PRICING SECTION ================= */}
+      <section id="pricing" className="py-24 relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 right-1/3 w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[100px]" />
+          <div className="absolute bottom-0 left-1/3 w-[300px] h-[300px] bg-indigo-600/10 rounded-full blur-[100px]" />
+        </div>
+        <div className="max-w-6xl mx-auto px-6 relative z-10">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 text-white">
+              Simple, <span className="text-blue-500">Transparent</span> Pricing
+            </h2>
+            <p className="text-slate-400 max-w-xl mx-auto">
+              No hidden fees. No surprises. Just the platform you need to manage land tax effortlessly.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                name: 'Citizen',
+                price: 'Free',
+                sub: 'For individual property owners',
+                color: 'border-slate-700',
+                badge: null,
+                features: ['Register up to 3 properties', 'View tax breakdown', 'Download PDF receipts', 'Payment history'],
+              },
+              {
+                name: 'Municipality',
+                price: '₹4,999',
+                sub: 'per month · billed annually',
+                color: 'border-blue-500/60',
+                badge: 'Most Popular',
+                features: ['Unlimited properties', 'Admin dashboard & analytics', 'Zone-wise revenue reports', 'Auto penalty scheduler', 'Dispute management portal', 'Priority support'],
+              },
+              {
+                name: 'Enterprise',
+                price: 'Custom',
+                sub: 'For large municipalities & states',
+                color: 'border-slate-700',
+                badge: null,
+                features: ['Everything in Municipality', 'Dedicated infrastructure', 'Custom integrations & API', 'SLA guarantee (99.9% uptime)', 'On-site training & onboarding'],
+              },
+            ].map((plan) => (
+              <motion.div
+                key={plan.name}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className={`relative flex flex-col p-8 rounded-3xl bg-slate-900/80 border ${plan.badge ? 'border-blue-500/60 shadow-[0_0_40px_-10px_rgba(59,130,246,0.4)]' : 'border-slate-700'
+                  } backdrop-blur-sm`}
+              >
+                {plan.badge && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-blue-600 text-white text-xs font-bold uppercase tracking-widest shadow-lg">
+                    {plan.badge}
+                  </div>
+                )}
+                <p className="text-slate-400 text-sm font-semibold uppercase tracking-widest mb-2">{plan.name}</p>
+                <p className="text-4xl font-extrabold text-white mb-1">{plan.price}</p>
+                <p className="text-slate-500 text-sm mb-8">{plan.sub}</p>
+                <ul className="space-y-3 mb-10 flex-1">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-center gap-3 text-slate-300 text-sm">
+                      <CheckCircle2 size={16} className="text-blue-400 shrink-0" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  to={plan.price === 'Free' ? '/register' : '/register'}
+                  className={`mt-auto text-center py-3 px-6 rounded-xl font-bold text-sm transition-all hover:scale-105 active:scale-95 ${plan.badge
+                      ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_20px_-5px_rgba(37,99,235,0.6)]'
+                      : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600'
+                    }`}
+                >
+                  {plan.price === 'Custom' ? 'Contact Us' : 'Get Started'}
+                </Link>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 

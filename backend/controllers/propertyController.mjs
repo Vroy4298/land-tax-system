@@ -374,10 +374,13 @@ export const downloadReceipt = async (req, res) => {
       currentY += 18;
     };
 
-    drawCalcRow("Base Rate", `₹ ${p.baseRate}`);
-    drawCalcRow("Zone Multiplier", `x ${p.zoneMultiplier}`);
-    drawCalcRow("Usage Multiplier", `x ${p.usageMultiplier}`);
+    drawCalcRow("Built-up Area (sq ft)", `${p.builtUpArea}`);
+    drawCalcRow("Unit Area Value (UAV)", `₹ ${p.uav}`);
     drawCalcRow("Age Factor", `x ${p.ageFactor}`);
+    drawCalcRow("Usage Factor", `x ${p.usageFactor}`);
+    drawCalcRow("Structure Factor", `x ${p.structureFactor}`);
+    drawCalcRow("Floor Factor", `x ${p.floorFactor}`);
+    drawCalcRow("Tax Rate", `${(p.taxRatePercent * 100).toFixed(0)}%`);
 
     currentY += 10;
 

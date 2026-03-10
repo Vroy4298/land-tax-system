@@ -18,12 +18,14 @@ const paidIcon = new L.Icon({
     iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
     shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
     iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34],
+    className: "leaflet-marker-blink"
 });
 
 const pendingIcon = new L.Icon({
     iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
     shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
     iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34],
+    className: "leaflet-marker-blink"
 });
 
 // Geocode an address using Nominatim (free, no API key)
@@ -86,6 +88,17 @@ export default function MapView() {
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-[#0b1220] pt-24 pb-10 px-6 md:px-10">
+            <style>{`
+                @keyframes marker-blink {
+                    0% { opacity: 1; transform: scale(1); filter: brightness(1); }
+                    50% { opacity: 0.6; transform: scale(1.15); filter: brightness(1.3) drop-shadow(0 0 8px rgba(255,255,255,0.8)); }
+                    100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+                }
+                .leaflet-marker-blink {
+                    animation: marker-blink 1.5s infinite ease-in-out;
+                }
+            `}</style>
+
             <div className="max-w-6xl mx-auto">
 
                 {/* Header */}

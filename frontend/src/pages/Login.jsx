@@ -2,12 +2,12 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Eye, 
-  EyeOff, 
-  Building2, 
-  CheckCircle2, 
-  ShieldCheck, 
+import {
+  Eye,
+  EyeOff,
+  Building2,
+  CheckCircle2,
+  ShieldCheck,
   ArrowRight,
   Lock,
   Mail
@@ -33,7 +33,16 @@ function Login() {
     const token = localStorage.getItem("token") || sessionStorage.getItem("token");
     const expiry = localStorage.getItem("expiry") || sessionStorage.getItem("expiry");
     if (token && expiry && Date.now() < Number(expiry)) {
-      window.location.href = "/dashboard";
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        if (payload.role === "admin") {
+          window.location.href = "/admin";
+        } else {
+          window.location.href = "/dashboard";
+        }
+      } catch {
+        window.location.href = "/dashboard";
+      }
     }
   }, []);
 
@@ -49,6 +58,16 @@ function Login() {
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setErrors((prev) => ({ ...prev, [e.target.name]: undefined }));
+  };
+
+  const fillDemoCitizen = () => {
+    setForm({ ...form, email: "citizen@example.com", password: "password123" });
+    setErrors({});
+  };
+
+  const fillDemoAdmin = () => {
+    setForm({ ...form, email: "admin@example.com", password: "password123" });
+    setErrors({});
   };
 
   const handleSubmit = async (e) => {
@@ -90,8 +109,11 @@ function Login() {
         sessionStorage.setItem("expiry", expiresAt);
       }
 
+      const rolePayload = JSON.parse(atob(data.token.split(".")[1])) || {};
+      const role = rolePayload.role || "citizen";
+
       toast.success("Welcome back! Redirecting...");
-      setTimeout(() => (window.location.href = "/dashboard"), 1000);
+      setTimeout(() => (window.location.href = role === "admin" ? "/admin" : "/dashboard"), 1000);
     } catch {
       toast.error("Network error. Try again later.");
     } finally {
@@ -166,6 +188,25 @@ function Login() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+
+              {/* DEMO CREDENTIALS SHORTCUTS */}
+              <div className="flex gap-3 mb-2">
+                <button
+                  type="button"
+                  onClick={fillDemoCitizen}
+                  className="flex-1 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                >
+                  Demo Citizen
+                </button>
+                <button
+                  type="button"
+                  onClick={fillDemoAdmin}
+                  className="flex-1 py-2 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/20 transition-colors"
+                >
+                  Demo Admin
+                </button>
+              </div>
+
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Email Address</label>
                 <div className="relative group">
@@ -173,8 +214,8 @@ function Login() {
                   <input
                     type="email" name="email" value={form.email} onChange={handleChange} placeholder="name@agency.gov"
                     className={`w-full pl-12 pr-4 py-3.5 rounded-2xl border transition-all duration-300 outline-none font-medium
-                      ${errors.email 
-                        ? 'border-red-500 bg-red-50/50 dark:bg-red-900/10' 
+                      ${errors.email
+                        ? 'border-red-500 bg-red-50/50 dark:bg-red-900/10'
                         : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:border-blue-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10'
                       } text-slate-900 dark:text-white`}
                   />
@@ -192,8 +233,8 @@ function Login() {
                   <input
                     type={showPassword ? "text" : "password"} name="password" value={form.password} onChange={handleChange} placeholder="••••••••"
                     className={`w-full pl-12 pr-12 py-3.5 rounded-2xl border transition-all duration-300 outline-none font-medium
-                      ${errors.password 
-                        ? 'border-red-500 bg-red-50/50 dark:bg-red-900/10' 
+                      ${errors.password
+                        ? 'border-red-500 bg-red-50/50 dark:bg-red-900/10'
                         : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:border-blue-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10'
                       } text-slate-900 dark:text-white`}
                   />

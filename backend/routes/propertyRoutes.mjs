@@ -10,6 +10,7 @@ import {
   payInstallment
 } from "../controllers/propertyController.mjs";
 import { upload, uploadDocument, getDocuments } from "../controllers/documentController.mjs";
+import { handlePayTax } from "../controllers/paymentController.mjs";
 
 import { authMiddleware } from "../middleware/authMiddleware.mjs";
 
@@ -45,6 +46,9 @@ router.get("/:id/documents", getDocuments);
 
 // Installment payment
 router.post("/:id/installment", payInstallment);
+
+// Pay Now simulation
+router.patch("/:id/pay", handlePayTax);
 
 // 🚀 MOST IMPORTANT LINE
 export default router;

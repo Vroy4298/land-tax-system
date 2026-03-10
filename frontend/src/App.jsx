@@ -40,15 +40,15 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/properties" element={<ProtectedRoute><PropertyList /></ProtectedRoute>} />
-          <Route path="/add-property" element={<ProtectedRoute><AddProperty /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute citizenOnly><Dashboard /></ProtectedRoute>} />
+          <Route path="/properties" element={<ProtectedRoute citizenOnly><PropertyList /></ProtectedRoute>} />
+          <Route path="/add-property" element={<ProtectedRoute citizenOnly><AddProperty /></ProtectedRoute>} />
           <Route path="/properties/:id" element={<ProtectedRoute><PropertyDetails /></ProtectedRoute>} />
-          <Route path="/properties/:id/edit" element={<ProtectedRoute><EditProperty /></ProtectedRoute>} />
-          <Route path="/payment-history" element={<ProtectedRoute><PaymentHistory /></ProtectedRoute>} />
+          <Route path="/properties/:id/edit" element={<ProtectedRoute citizenOnly><EditProperty /></ProtectedRoute>} />
+          <Route path="/payment-history" element={<ProtectedRoute citizenOnly><PaymentHistory /></ProtectedRoute>} />
 
           {/* Phase 3 */}
-          <Route path="/map" element={<ProtectedRoute><MapView /></ProtectedRoute>} />
+          <Route path="/map" element={<ProtectedRoute citizenOnly><MapView /></ProtectedRoute>} />
           <Route path="/disputes" element={<ProtectedRoute><Disputes /></ProtectedRoute>} />
 
           {/* Admin routes — Phase 2 */}

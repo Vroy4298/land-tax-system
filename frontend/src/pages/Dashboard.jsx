@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   PieChart, Pie, Cell,
   ResponsiveContainer,
   Tooltip as RechartsTooltip
 } from "recharts";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import {
   LayoutDashboard,
   Building2,
@@ -36,12 +37,55 @@ export default function Dashboard() {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
+  const navigate = useNavigate();
   const adminUser = isAdmin();
+  const { t } = useTranslation();
 
   const [stats, setStats] = useState({
     totalProperties: 0,
     totalTax: 0,
   });
+
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = React.useRef(null);
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert(t("Only images are allowed"));
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      alert(t("Image size should be less than 2MB"));
+      return;
+    }
+
+    setUploadingAvatar(true);
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API_URL}/api/users/profile/avatar`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok && data.avatarUrl) {
+        setUser((prev) => ({ ...prev, avatarUrl: data.avatarUrl }));
+        localStorage.setItem("userAvatar", data.avatarUrl); // Support navbar if needed
+      } else {
+        alert(data.error || t("Failed to upload avatar"));
+      }
+    } catch (err) {
+      alert(t("Network error during upload"));
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,7 +94,7 @@ export default function Dashboard() {
       try {
         const token = getAuthToken();
         if (!token) {
-          window.location.href = "/login";
+          navigate("/login");
           return;
         }
 
@@ -81,6 +125,10 @@ export default function Dashboard() {
           totalTax,
         });
 
+        if (userData?.avatarUrl) {
+          localStorage.setItem("userAvatar", userData.avatarUrl);
+        }
+
       } catch (err) {
         console.error("Dashboard load error:", err);
       } finally {
@@ -89,7 +137,7 @@ export default function Dashboard() {
     };
 
     fetchData();
-  }, []);
+  }, [navigate]);
 
   // Chart data (unchanged)
   const getChartData = () => {
@@ -116,22 +164,22 @@ export default function Dashboard() {
               <Building2 size={18} className="text-white" />
             </div>
             <span className="font-bold text-base tracking-tight text-slate-900 dark:text-white">
-              LandTax <span className="text-blue-600 dark:text-blue-400 font-extrabold">System</span>
+              {t("LandTax")} <span className="text-blue-600 dark:text-blue-400 font-extrabold">{t("System")}</span>
             </span>
           </div>
         </div>
 
         <nav className="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
           <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 px-3">
-            Main Menu
+            {t("Main Menu")}
           </div>
           {[
-            { to: "/dashboard", icon: <LayoutDashboard size={18} />, label: "Dashboard" },
-            { to: "/properties", icon: <Building2 size={18} />, label: "Properties" },
-            { to: "/add-property", icon: <PlusSquare size={18} />, label: "Add Property" },
-            { to: "/payment-history", icon: <CreditCard size={18} />, label: "Payments" },
-            { to: "/map", icon: <Map size={18} />, label: "Map View" },
-            { to: "/disputes", icon: <AlertCircle size={18} />, label: "Disputes" },
+            { to: "/dashboard", icon: <LayoutDashboard size={18} />, label: t("Dashboard") },
+            { to: "/properties", icon: <Building2 size={18} />, label: t("Properties") },
+            { to: "/add-property", icon: <PlusSquare size={18} />, label: t("Add Property") },
+            { to: "/payment-history", icon: <CreditCard size={18} />, label: t("Payments") },
+            { to: "/map", icon: <Map size={18} />, label: t("Map View") },
+            { to: "/disputes", icon: <AlertCircle size={18} />, label: t("Disputes") },
           ].map(({ to, icon, label }) => {
             const active = location.pathname === to || (to !== "/dashboard" && location.pathname.startsWith(to));
             return (
@@ -139,8 +187,8 @@ export default function Dashboard() {
                 key={to}
                 to={to}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 group ${active
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
-                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100"
+                  ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
+                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100"
                   }`}
               >
                 <span className={active ? "text-white" : "text-slate-400 group-hover:text-blue-500 transition-colors"}>{icon}</span>
@@ -150,44 +198,19 @@ export default function Dashboard() {
             );
           })}
 
-          {adminUser && (
-            <>
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4 mb-2 px-3">
-                Admin
-              </div>
-              {[
-                { to: "/admin", label: "Analytics" },
-                { to: "/admin/properties", label: "All Properties" },
-                { to: "/admin/users", label: "All Users" },
-              ].map(({ to, label }) => {
-                const active = location.pathname === to;
-                return (
-                  <Link
-                    key={to} to={to}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ${active
-                        ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
-                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100"
-                      }`}
-                  >
-                    <ShieldCheck size={18} className={active ? "text-white" : "text-slate-400"} />
-                    <span>{label}</span>
-                  </Link>
-                );
-              })}
-            </>
-          )}
+
         </nav>
 
         <div className="p-4 border-t border-slate-100 dark:border-slate-800">
           <button
             onClick={() => {
               localStorage.clear();
-              window.location.href = "/login";
+              navigate("/login");
             }}
             className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/10 dark:text-slate-400 dark:hover:text-red-400 transition-all duration-200 group"
           >
             <LogOut size={20} className="group-hover:translate-x-1 transition-transform" />
-            <span className="font-medium">Sign Out</span>
+            <span className="font-medium">{t("Sign Out")}</span>
           </button>
         </div>
       </aside>
@@ -202,7 +225,7 @@ export default function Dashboard() {
               <Menu size={24} />
             </button>
             <h2 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">
-              Dashboard Overview
+              {t("Dashboard Overview")}
             </h2>
           </div>
 
@@ -211,7 +234,7 @@ export default function Dashboard() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input
                 type="text"
-                placeholder="Search records..."
+                placeholder={t("Search records...")}
                 className="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm border-none focus:ring-2 focus:ring-blue-500 w-64 transition-all"
               />
             </div>
@@ -222,10 +245,32 @@ export default function Dashboard() {
             <div className="flex items-center gap-3 pl-6 border-l border-slate-200 dark:border-slate-700">
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-semibold text-slate-900 dark:text-white">{user?.name}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{adminUser ? "Admin" : "User"}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{adminUser ? t("Admin") : t("User")}</p>
               </div>
-              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold shadow-lg shadow-blue-500/30 ring-2 ring-white dark:ring-slate-800 cursor-pointer hover:scale-105 transition-transform">
-                {user?.name?.[0]}
+
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleAvatarUpload}
+                className="hidden"
+                accept="image/*"
+              />
+
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="h-11 w-11 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold shadow-lg shadow-blue-500/30 ring-2 ring-white dark:ring-slate-800 cursor-pointer hover:scale-105 transition-transform overflow-hidden relative group"
+                title={t("Upload Profile Picture")}
+              >
+                {uploadingAvatar ? (
+                  <div className="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin"></div>
+                ) : user?.avatarUrl ? (
+                  <img src={user.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  user?.name?.[0]
+                )}
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <ChevronRight size={14} className="text-white" />
+                </div>
               </div>
             </div>
           </div>
@@ -246,15 +291,15 @@ export default function Dashboard() {
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold mb-2">
-                  Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">{user?.name}</span> 👋
+                  {t("Welcome back, ")}<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">{user?.name}</span> 👋
                 </h1>
                 <p className="text-slate-300 text-lg opacity-90 max-w-xl">
-                  Here's what's happening with your property portfolio and tax insights today.
+                  {t("Here's what's happening with your property portfolio and tax insights today.")}
                 </p>
               </div>
               <Link to="/add-property" className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-semibold shadow-lg shadow-blue-600/30 transition-all hover:scale-105 active:scale-95 flex items-center gap-2">
                 <PlusSquare size={18} />
-                Add New Property
+                {t("Add New Property")}
               </Link>
             </div>
           </motion.div>
@@ -272,7 +317,7 @@ export default function Dashboard() {
                 </div>
                 <span className="text-xs font-bold text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-lg">Active</span>
               </div>
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Total Properties</p>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">{t("Total Properties")}</p>
               <span className="text-3xl font-bold text-slate-900 dark:text-white">{stats.totalProperties}</span>
             </motion.div>
 
@@ -287,7 +332,7 @@ export default function Dashboard() {
                 </div>
                 <span className="text-xs font-bold text-slate-400 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded-lg">INR</span>
               </div>
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Total Tax Value</p>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">{t("Total Tax Value")}</p>
               <span className="text-3xl font-bold text-slate-900 dark:text-white font-mono">₹{stats.totalTax.toLocaleString()}</span>
             </motion.div>
 
@@ -302,7 +347,7 @@ export default function Dashboard() {
                 </div>
                 <span className="text-xs font-bold text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg">Verified</span>
               </div>
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Registered Email</p>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">{t("Registered Email")}</p>
               <span className="text-sm font-semibold text-slate-900 dark:text-white truncate block" title={user?.email}>{user?.email}</span>
             </motion.div>
           </div>
@@ -320,11 +365,11 @@ export default function Dashboard() {
               >
                 <div className="px-8 py-6 border-b border-slate-50 dark:border-slate-800 flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-white">Recent Properties</h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Manage your latest added assets</p>
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-white">{t("Recent Properties")}</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{t("Manage your latest added assets")}</p>
                   </div>
                   <Link to="/properties" className="text-blue-600 dark:text-blue-400 text-sm font-bold flex items-center gap-1 hover:gap-2 transition-all">
-                    View All <ArrowRight size={16} />
+                    {t("View All")} <ArrowRight size={16} />
                   </Link>
                 </div>
 

@@ -237,3 +237,29 @@ export const makeAdmin = async (req, res) => {
     return res.status(500).json({ error: "Server error" });
   }
 };
+
+/* ---------------------- UPLOAD AVATAR ---------------------- */
+export const uploadAvatar = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    if (!req.file) {
+      return res.status(400).json({ error: "No image file provided" });
+    }
+
+    // Convert file buffer to base64 string
+    const base64Image = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
+
+    const db = await connectDB();
+    const users = db.collection("users");
+
+    await users.updateOne(
+      { _id: new ObjectId(userId) },
+      { $set: { avatarUrl: base64Image } }
+    );
+
+    return res.json({ message: "Avatar updated successfully", avatarUrl: base64Image });
+  } catch (err) {
+    console.error("Upload avatar error:", err);
+    return res.status(500).json({ error: "Server error" });
+  }
+};

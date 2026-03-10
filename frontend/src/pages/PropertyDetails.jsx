@@ -50,6 +50,7 @@ export default function PropertyDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [paying, setPaying] = useState(false);
+  const [showPayModal, setShowPayModal] = useState(false);
 
   // Documents state
   const [documents, setDocuments] = useState([]);
@@ -148,15 +149,14 @@ export default function PropertyDetails() {
 
   };
 
-  /* ---------------- PAY NOW ---------------- */
   const handlePayNow = async () => {
     if (paying) return;
     setPaying(true);
     try {
       const token = getAuthToken();
 
-      const res = await apiFetch(`/api/pay-tax/pay/${property._id}`, {
-        method: "POST",
+      const res = await apiFetch(`/api/properties/${property._id}/pay`, {
+        method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -176,6 +176,7 @@ export default function PropertyDetails() {
         paymentDate: data.paidOn,
         receiptId: data.receiptId,
       }));
+      setShowPayModal(false);
       alert("Payment successful!");
     } catch (err) {
       console.error(err);
@@ -406,6 +407,8 @@ export default function PropertyDetails() {
                   <InfoItem label="Zone" value={`Zone ${property.zone}`} icon={<MapPin size={14} />} />
                   <InfoItem label="Usage" value={property.usageType} icon={<Building2 size={14} />} />
                   <InfoItem label="Year" value={property.constructionYear || "N/A"} icon={<Calendar size={14} />} />
+                  <InfoItem label="Structure" value={property.structureType || "Pucca"} icon={<Building2 size={14} />} />
+                  <InfoItem label="Floor" value={property.floorType || "Ground"} icon={<Layers size={14} />} />
                 </div>
               </motion.div>
             </div>
@@ -449,7 +452,7 @@ export default function PropertyDetails() {
                 </div>
 
                 <button
-                  onClick={property.paymentStatus === 'paid' ? handlePrint : handlePayNow}
+                  onClick={property.paymentStatus === 'paid' ? handlePrint : () => setShowPayModal(true)}
                   disabled={paying}
                   className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl shadow-xl shadow-blue-600/30 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
@@ -604,6 +607,54 @@ export default function PropertyDetails() {
         )}
 
       </div>
+
+      {/* CONFIRM PAYMENT MODAL */}
+      <AnimatePresence>
+        {showPayModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-slate-200 dark:border-slate-800 relative overflow-hidden text-center"
+            >
+              <div className="absolute top-0 right-0 -mr-16 -mt-16 w-32 h-32 bg-blue-600/10 rounded-full blur-2xl pointer-events-none"></div>
+
+              <div className="mx-auto w-16 h-16 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mb-6">
+                <CreditCard size={32} />
+              </div>
+
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Simulate Payment</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
+                You are about to simulate a tax payment of <strong className="text-slate-800 dark:text-slate-200">₹{property.finalTaxAmount?.toLocaleString("en-IN")}</strong> for this property. Proceed?
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowPayModal(false)}
+                  disabled={paying}
+                  className="flex-1 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handlePayNow}
+                  disabled={paying}
+                  className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-600/25 transition disabled:opacity-70 flex justify-center items-center"
+                >
+                  {paying ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : "Confirm"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

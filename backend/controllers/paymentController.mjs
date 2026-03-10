@@ -4,7 +4,7 @@ import { ObjectId } from "mongodb";
 export const handlePayTax = async (req, res) => {
   try {
     const userId = req.user.id;
-    const propertyId = req.params.propertyId;
+    const propertyId = req.params.propertyId || req.params.id;
 
     const db = await connectDB();
     const properties = db.collection("properties");

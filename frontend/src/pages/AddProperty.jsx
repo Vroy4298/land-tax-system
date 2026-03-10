@@ -2,19 +2,19 @@ import { useState, useEffect } from "react";
 import { apiFetch } from "../utils/api";
 
 import { motion } from "framer-motion";
-import { 
-  User, 
-  Phone, 
-  Mail, 
-  MapPin, 
-  Ruler, 
-  Calendar, 
-  Building2, 
-  Briefcase, 
-  Map, 
-  Calculator, 
-  Save, 
-  CheckCircle2, 
+import {
+  User,
+  Phone,
+  Mail,
+  MapPin,
+  Ruler,
+  Calendar,
+  Building2,
+  Briefcase,
+  Map,
+  Calculator,
+  Save,
+  CheckCircle2,
   ArrowRight
 } from "lucide-react";
 import { getAuthToken } from "../utils/auth";
@@ -25,19 +25,27 @@ export default function AddProperty() {
     ownerPhone: "",
     ownerEmail: "",
     address: "",
+    district: "",
+    ward: "",
+    city: "",
+    pincode: "",
     builtUpArea: "",
     constructionYear: "",
     propertyType: "Residential",
     usageType: "Self-Occupied",
+    structureType: "Pucca",
+    floorType: "Ground",
     zone: "A",
   });
 
   const [taxPreview, setTaxPreview] = useState({
     finalTax: 0,
-    baseRate: 0,
-    zoneMultiplier: 1,
-    usageMultiplier: 1,
+    uav: 0,
+    usageFactor: 1,
     ageFactor: 1,
+    structureFactor: 1,
+    floorFactor: 1,
+    taxRatePercent: 0.12,
   });
 
   useEffect(() => {
@@ -45,103 +53,160 @@ export default function AddProperty() {
   }, [form]);
 
   const calculatePreview = () => {
-    const { builtUpArea, propertyType, zone, usageType, constructionYear } = form;
+    const { builtUpArea, propertyType, zone, usageType, constructionYear, structureType, floorType } = form;
 
-    const baseRates = { Residential: 2.5, Commercial: 5, Industrial: 3.5 };
-    const zoneMultiplier = { A: 1.3, B: 1.1, C: 1.0 };
-    const usageMultiplier = { "Self-Occupied": 1.0, Rented: 1.2 };
+    const cleanType = String(propertyType).toLowerCase();
+    const cleanUsage = String(usageType).toLowerCase();
+    const cleanZone = String(zone).toUpperCase();
+    const cleanStructure = String(structureType).toLowerCase();
+    const cleanFloor = String(floorType).toLowerCase();
 
+    /* ---------------- UAV RATES ---------------- */
+    const uavRates = { A: 630, B: 500, C: 400, D: 270 };
+    const uav = uavRates[cleanZone] || 400;
+
+    /* ---------------- USAGE FACTOR ---------------- */
+    let usageFactor = 1.0;
+    if (cleanType === "residential" && cleanUsage === "rented") usageFactor = 2.0;
+    else if (cleanType === "commercial") usageFactor = 4.0;
+    else if (cleanType === "industrial") usageFactor = 3.0;
+    else if (cleanType === "agricultural") usageFactor = 0.5;
+
+    /* ---------------- AGE FACTOR ---------------- */
     const currentYear = new Date().getFullYear();
-    const age = currentYear - Number(constructionYear || currentYear);
-    const ageFactor = age > 30 ? 0.7 : age > 20 ? 0.8 : age > 10 ? 0.9 : 1;
+    const year = Number(constructionYear);
+    const age = !year || isNaN(year) ? 0 : currentYear - year;
 
-    const final =
-      Number(builtUpArea || 0) *
-      baseRates[propertyType] *
-      zoneMultiplier[zone] *
-      usageMultiplier[usageType] *
-      ageFactor;
+    let ageFactor = 1.0;
+    if (age >= 5 && age < 10) ageFactor = 0.95;
+    else if (age >= 10 && age < 20) ageFactor = 0.9;
+    else if (age >= 20 && age < 30) ageFactor = 0.8;
+    else if (age >= 30 && age <= 40) ageFactor = 0.7;
+    else if (age > 40) ageFactor = 0.625;
+
+    /* ---------------- STRUCTURE FACTOR ---------------- */
+    let structureFactor = 1.0;
+    if (cleanStructure === "semi-pucca") structureFactor = 0.8;
+    else if (cleanStructure === "kaccha") structureFactor = 0.5;
+
+    /* ---------------- FLOOR FACTOR ---------------- */
+    let floorFactor = 1.0; // Ground
+    if (cleanFloor === "1st") floorFactor = 0.9;
+    else if (cleanFloor === "2nd+") floorFactor = 0.8;
+
+    /* ---------------- TAX RATE % ---------------- */
+    let taxRatePercent = 0.12; // 12% residential
+    if (cleanType === "commercial") taxRatePercent = 0.20;
+    else if (cleanType === "industrial") taxRatePercent = 0.15;
+    else if (cleanType === "agricultural") taxRatePercent = 0.08;
+
+    const final = Number(builtUpArea || 0) * uav * ageFactor * usageFactor * structureFactor * floorFactor * taxRatePercent;
 
     setTaxPreview({
       finalTax: Math.round(final),
-      baseRate: baseRates[propertyType],
-      zoneMultiplier: zoneMultiplier[zone],
-      usageMultiplier: usageMultiplier[usageType],
+      uav,
+      usageFactor,
       ageFactor,
+      structureFactor,
+      floorFactor,
+      taxRatePercent
     });
   };
 
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     const token = getAuthToken();
-//     if (!token) {
-//       alert("Session expired. Please login again.");
-//       window.location.href = "/login";
-//       return;
-//     }
+  //   const handleSubmit = async (e) => {
+  //     e.preventDefault();
+  //     const token = getAuthToken();
+  //     if (!token) {
+  //       alert("Session expired. Please login again.");
+  //       window.location.href = "/login";
+  //       return;
+  //     }
 
-//     const res = await apiFetch("/api/properties", {
-//   method: "POST",
-//   headers: {
-//     Authorization: `Bearer ${token}`,
-//   },
-//   body: JSON.stringify(payload),
-// });
+  //     const res = await apiFetch("/api/properties", {
+  //   method: "POST",
+  //   headers: {
+  //     Authorization: `Bearer ${token}`,
+  //   },
+  //   body: JSON.stringify(payload),
+  // });
 
-//     const data = await res.json();
-//     if (res.ok) alert("Property Added!");
-//     else alert(data.error);
-//   };
+  //     const data = await res.json();
+  //     if (res.ok) alert("Property Added!");
+  //     else alert(data.error);
+  //   };
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   /* ================= SUBMIT ================= */
-    const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  const token = getAuthToken();
-  if (!token) {
-    alert("Session expired. Please login again.");
-    window.location.href = "/login";
-    return;
-  }
-
-  const payload = {
-    ownerName: form.ownerName,
-    ownerPhone: form.ownerPhone,
-    ownerEmail: form.ownerEmail,
-    address: form.address,
-
-    propertyType: form.propertyType,
-    usageType: form.usageType,
-    zone: form.zone,
-
-    builtUpArea: Number(form.builtUpArea),
-    constructionYear: Number(form.constructionYear),
-  };
-
-  try {
-    const res = await apiFetch("/api/properties", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      alert(data.error || "Failed to save property");
+    if (!form.ownerName || !form.address || !form.builtUpArea) {
+      alert("Owner name, Address, and Built-up Area are required.");
+      return;
+    }
+    if (form.ownerEmail && !/^\S+@\S+\.\S+$/.test(form.ownerEmail)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+    if (form.ownerPhone && !/^\d{10}$/.test(form.ownerPhone)) {
+      alert("Phone number must be exactly 10 digits.");
+      return;
+    }
+    if (form.pincode && !/^\d{6}$/.test(form.pincode)) {
+      alert("Pincode must be exactly 6 digits.");
       return;
     }
 
-    alert("✅ Property Added Successfully");
-    window.location.href = "/properties";
-  } catch (err) {
-    console.error("Add property error:", err);
-    alert("Network error. Please try again.");
-  }
-};
+    const token = getAuthToken();
+    if (!token) {
+      alert("Session expired. Please login again.");
+      window.location.href = "/login";
+      return;
+    }
+
+    const payload = {
+      ownerName: form.ownerName,
+      ownerPhone: form.ownerPhone,
+      ownerEmail: form.ownerEmail,
+      address: form.address,
+      district: form.district,
+      ward: form.ward,
+      city: form.city,
+      pincode: form.pincode,
+
+      propertyType: form.propertyType,
+      usageType: form.usageType,
+      structureType: form.structureType,
+      floorType: form.floorType,
+      zone: form.zone,
+
+      builtUpArea: Number(form.builtUpArea),
+      constructionYear: Number(form.constructionYear),
+    };
+
+    try {
+      const res = await apiFetch("/api/properties", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Failed to save property");
+        return;
+      }
+
+      alert("✅ Property Added Successfully");
+      window.location.href = "/properties";
+    } catch (err) {
+      console.error("Add property error:", err);
+      alert("Network error. Please try again.");
+    }
+  };
   // --- Animation Variants ---
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -155,12 +220,12 @@ export default function AddProperty() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0b1220] font-sans transition-colors duration-300">
-      
+
       {/* Main Content Wrapper - Added pt-32 to clear navbar */}
       <div className="max-w-7xl mx-auto px-6 md:px-8 pt-32 pb-16">
-        
+
         {/* Header Section */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-10 max-w-3xl"
@@ -176,7 +241,7 @@ export default function AddProperty() {
           </p>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -186,7 +251,7 @@ export default function AddProperty() {
           {/* ================= LEFT COLUMN: FORM ================= */}
           <div className="lg:col-span-8">
             <form onSubmit={handleSubmit} className="space-y-6">
-              
+
               {/* CARD 1: OWNER INFORMATION */}
               <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-xl shadow-slate-200/40 dark:shadow-black/20 border border-slate-100 dark:border-slate-800">
                 <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
@@ -270,18 +335,43 @@ export default function AddProperty() {
                   {/* Address */}
                   <div className="space-y-1.5">
                     <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
-                      Full Address <span className="text-red-500">*</span>
+                      House No. / Street <span className="text-red-500">*</span>
                     </label>
                     <div className="relative group">
-                      <MapPin className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
-                      <textarea
+                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
+                      <input
                         name="address"
-                        rows="2"
                         value={form.address}
                         onChange={handleChange}
-                        placeholder="Flat No, Street, Locality, City..."
-                        className="w-full pl-11 pr-5 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-800 outline-none transition-all duration-200 shadow-sm resize-none"
+                        placeholder="House No., Street, Locality..."
+                        className="w-full pl-11 pr-5 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-800 outline-none transition-all duration-200 shadow-sm"
                       />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* District */}
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">District</label>
+                      <input name="district" value={form.district} onChange={handleChange} placeholder="e.g. Pune" className="w-full px-5 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-medium" />
+                    </div>
+                    {/* Ward */}
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Ward</label>
+                      <input name="ward" value={form.ward} onChange={handleChange} placeholder="e.g. Ward A" className="w-full px-5 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-medium" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* City */}
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">City</label>
+                      <input name="city" value={form.city} onChange={handleChange} placeholder="e.g. Pune" className="w-full px-5 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-medium" />
+                    </div>
+                    {/* Pincode */}
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Pincode</label>
+                      <input name="pincode" type="number" value={form.pincode} onChange={handleChange} placeholder="e.g. 411001" className="w-full px-5 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-medium" />
                     </div>
                   </div>
 
@@ -354,6 +444,7 @@ export default function AddProperty() {
                         <option>Residential</option>
                         <option>Commercial</option>
                         <option>Industrial</option>
+                        <option>Agricultural</option>
                       </select>
                       <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -399,6 +490,7 @@ export default function AddProperty() {
                         <option>A</option>
                         <option>B</option>
                         <option>C</option>
+                        <option>D</option>
                       </select>
                       <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -406,12 +498,48 @@ export default function AddProperty() {
                     </div>
                   </div>
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                  {/* Structure */}
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
+                      Structure Type
+                    </label>
+                    <select
+                      name="structureType"
+                      value={form.structureType}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all shadow-sm appearance-none cursor-pointer font-medium"
+                    >
+                      <option>Pucca</option>
+                      <option>Semi-Pucca</option>
+                      <option>Kaccha</option>
+                    </select>
+                  </div>
+
+                  {/* Floor */}
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
+                      Floor Level
+                    </label>
+                    <select
+                      name="floorType"
+                      value={form.floorType}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all shadow-sm appearance-none cursor-pointer font-medium"
+                    >
+                      <option>Ground</option>
+                      <option>1st</option>
+                      <option>2nd+</option>
+                    </select>
+                  </div>
+                </div>
               </motion.div>
 
               {/* ACTION BUTTON */}
               <motion.div variants={itemVariants} className="pt-4">
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-lg shadow-xl shadow-blue-600/20 transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-3"
                 >
                   <Save size={22} />
@@ -424,15 +552,15 @@ export default function AddProperty() {
 
           {/* ================= RIGHT COLUMN: PREVIEW ================= */}
           <div className="lg:col-span-4 lg:sticky lg:top-36 h-fit">
-            <motion.div 
+            <motion.div
               variants={itemVariants}
               className="bg-slate-900 text-white rounded-3xl p-8 shadow-2xl shadow-slate-900/20 border border-slate-800 relative overflow-hidden"
             >
               {/* Background Decoration */}
               <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
-              
+
               <h3 className="text-xl font-bold mb-6 flex items-center gap-2 relative z-10">
-                <Calculator className="text-blue-400" /> 
+                <Calculator className="text-blue-400" />
                 Tax Calculator
               </h3>
 
@@ -444,23 +572,33 @@ export default function AddProperty() {
                 </div>
 
                 <div className="flex justify-between items-center text-sm py-2 border-b border-slate-800">
-                  <span className="text-slate-400">Base Rate ({form.propertyType})</span>
-                  <span className="font-mono text-slate-200">₹{taxPreview.baseRate}</span>
+                  <span className="text-slate-400">Unit Area Value (UAV)</span>
+                  <span className="font-mono text-slate-200">₹{taxPreview.uav}</span>
                 </div>
 
                 <div className="flex justify-between items-center text-sm py-2 border-b border-slate-800">
-                  <span className="text-slate-400">Zone Multiplier ({form.zone})</span>
-                  <span className="font-mono text-emerald-400">× {taxPreview.zoneMultiplier}</span>
+                  <span className="text-slate-400">Age Factor</span>
+                  <span className="font-mono text-emerald-400">× {taxPreview.ageFactor}</span>
                 </div>
 
                 <div className="flex justify-between items-center text-sm py-2 border-b border-slate-800">
                   <span className="text-slate-400">Usage Factor</span>
-                  <span className="font-mono text-emerald-400">× {taxPreview.usageMultiplier}</span>
+                  <span className="font-mono text-emerald-400">× {taxPreview.usageFactor}</span>
                 </div>
 
                 <div className="flex justify-between items-center text-sm py-2 border-b border-slate-800">
-                  <span className="text-slate-400">Age Adjustment</span>
-                  <span className="font-mono text-emerald-400">× {taxPreview.ageFactor}</span>
+                  <span className="text-slate-400">Structure Factor</span>
+                  <span className="font-mono text-emerald-400">× {taxPreview.structureFactor}</span>
+                </div>
+
+                <div className="flex justify-between items-center text-sm py-2 border-b border-slate-800">
+                  <span className="text-slate-400">Floor Factor</span>
+                  <span className="font-mono text-emerald-400">× {taxPreview.floorFactor}</span>
+                </div>
+
+                <div className="flex justify-between items-center text-sm py-2 border-b border-slate-800">
+                  <span className="text-slate-400">Tax Rate</span>
+                  <span className="font-mono text-blue-400 text-base font-bold">{(taxPreview.taxRatePercent * 100).toFixed(0)}%</span>
                 </div>
               </div>
 
@@ -479,7 +617,7 @@ export default function AddProperty() {
             </motion.div>
 
             {/* Helper Card */}
-            <motion.div 
+            <motion.div
               variants={itemVariants}
               className="mt-6 bg-blue-50 dark:bg-blue-900/10 rounded-2xl p-6 border border-blue-100 dark:border-blue-900/30"
             >

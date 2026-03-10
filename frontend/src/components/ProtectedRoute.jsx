@@ -1,9 +1,9 @@
 import { Navigate, useLocation } from "react-router-dom";
-import { getAuthToken } from "../utils/auth";
+import { getAuthToken, isAdmin } from "../utils/auth";
 import Loader from "./Loader";
 import { useEffect, useState } from "react";
 
-export default function ProtectedRoute({ children }) {
+export default function ProtectedRoute({ children, citizenOnly = false }) {
   const location = useLocation();
   const [checking, setChecking] = useState(true);
   const [authorized, setAuthorized] = useState(false);
@@ -34,6 +34,10 @@ export default function ProtectedRoute({ children }) {
         state={{ from: location }}
       />
     );
+  }
+
+  if (citizenOnly && isAdmin()) {
+    return <Navigate to="/admin" replace />;
   }
 
   return children;
