@@ -1,7 +1,7 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Sun, Moon, User, LogOut, Menu, X, Building2, ShieldCheck, Languages } from "lucide-react";
+import { Sun, Moon, User, LogOut, Menu, X, Building2, ShieldCheck, Languages, Map, AlertCircle } from "lucide-react";
 import { getAuthToken, isAdmin } from "../utils/auth";
 
 export default function Navbar() {
